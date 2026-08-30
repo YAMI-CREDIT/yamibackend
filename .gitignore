@@ -57,3 +57,6 @@ TestResult.xml
 nunit-*.xml
 .env
 .gitignore
+setup_and_run.md
+bin/
+obj/    
