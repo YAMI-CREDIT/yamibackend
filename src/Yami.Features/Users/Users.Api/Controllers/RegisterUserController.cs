@@ -16,16 +16,17 @@ public class RegisterUserController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
-        phone = request.phone
-        name = request.name
-        userType = request.userType
-        dateOfBirth = request.dateOfBirth
+        string phone = request.phone;
+        string name = request.name;
+        string userType = request.userType;
+        string dateOfBirth = request.dateOfBirth;
+
         if (string.IsNullOrWhiteSpace(phone) ||
             string.IsNullOrWhiteSpace(name) ||
             string.IsNullOrWhiteSpace(userType) ||
             string.IsNullOrWhiteSpace(dateOfBirth))
         {
-            return BadRequest(new { error = "phone, , name , userType and dateOfBirth are required." });
+            return BadRequest(new { error = "phone, name , userType and dateOfBirth are required." });
         }
 
         var newUser = await _userService.RegisterUser(phone, name, userType, dateOfBirth);
@@ -37,6 +38,6 @@ public class RegisterUserController : ControllerBase
             return Conflict(new { error = "This user is already registered." });
         }
 
-        return Ok(new { id = newUser.Id, phone = newUser.phone, name = newUser.name });
+        return Ok(new { id = newUser.id, phone = newUser.phone, name = newUser.name });
     }
 }
