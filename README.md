@@ -76,11 +76,14 @@ docker rm -f yami-postgres
 ```
 
 To view data. Use a database GUI such as pgAdmin, DBeaver, or TablePlus. Connect with:
+
+```bash
 Host: localhost
 Port: 5432
 Database: yami
 Username: yami
 Password: yami
+```
 
 
 
