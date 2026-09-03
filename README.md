@@ -22,7 +22,7 @@ dotnet restore
 
 ### Setup Object Relational Mapping (ORM)
 
-`dotnet ef migrations add` reads your AppDbContext/User classes and generates a C# file describing "here's the SQL needed to create this schema." This has to happen every time you change your models (e.g., add a new propertylater).
+`dotnet ef migrations add` reads your DbContext/model classes and generates a C# file describing "here's the SQL needed to create this schema." This has to happen every time you change your models (e.g., add a new property later).
 
 `dotnet ef database update` runs the generated migration against your DB, physically creating the Users table.
 
@@ -75,12 +75,15 @@ docker start yami-postgres
 docker rm -f yami-postgres
 ```
 
-To view data. Use a database GUI such as pgAdmin, DBeaver, or TablePlus. Connect with:
+To view data via a GUI, Use a database GUI such as pgAdmin, DBeaver, or TablePlus. Connect with:
+
+```bash
 Host: localhost
 Port: 5432
 Database: yami
 Username: yami
 Password: yami
+```
 
 
 
