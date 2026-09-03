@@ -1,4 +1,4 @@
-// This interface is a CONTRACT — it says "any UserService must be able
+// This interface is a CONTRACT. It says "any UserService must be able
 // to do this," without saying HOW. This is what lets us swap
 // implementations later (e.g. a fake one for tests) without touching
 // the controller at all.

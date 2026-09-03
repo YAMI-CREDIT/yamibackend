@@ -1,4 +1,4 @@
-// This class represents one row in the "Users" table.
+// This class represents one row in the "Users" table in the database
 public class User
 {
     public int id { get; set; }
