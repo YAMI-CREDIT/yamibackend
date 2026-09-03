@@ -1,2 +1,8 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Yami.Api/Yami.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Yami.Features/">
+    <Project Path="src/Yami.Features/Registration/Registration.csproj" />
+  </Folder>
 </Solution>
