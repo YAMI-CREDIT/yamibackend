@@ -35,7 +35,7 @@ public class UserService : IUserService
     }
 
     // This logic is an example to get user details from dB.
-    // I'll leave the implementation till later
+    // I'll leave the full implementation till later
     public async Task<User?> GetUser(string id)
     {
         Console.WriteLine($"Getting user by ID: {id}");

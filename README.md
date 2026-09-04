@@ -26,23 +26,38 @@ dotnet restore
 
 `dotnet ef database update` runs the generated migration against your DB, physically creating the Users table.
 
+> [!NOTE]
+> Before you use `dotnet ef` to set up your database, make sure it is running by following the instructions in [Run a local PostgreSQL DB](#run-a-local-postgresql-db)
+
 ```bash
 dotnet ef migrations add InitialCreate \
   --project src/Yami.Features/Users/Users.csproj \
   --startup-project src/Yami.Api/Yami.Api.csproj \
   --context UsersDbContext \
-  --output-dir Infrastructure/Data/Migrations
+  --output-dir EFInfrastructure/Data/Migrations
 
-
+export ConnectionStrings__DefaultConnection='Host=localhost;Port=5432;Database=yami;Username=yami;Password=yami'
 dotnet ef database update \
   --project src/Yami.Features/Users/Users.csproj \
   --startup-project src/Yami.Api/Yami.Api.csproj \
-  --context RegistrationDbContext
+  --context UsersDbContext
 ```
+
+If You've created the database before and you need to start on a clean DB slate, run:
+
+```bash
+dotnet ef database drop \
+  --project src/Yami.Features/Users/Users.csproj \
+  --startup-project src/Yami.Api/Yami.Api.csproj \
+  --context UsersDbContext \
+  --force
+  ```
+
+Delete the src/Yami.Features/Users/EFInfrastructure folder and then run the `dotnet ef migrations` and `dotnet ef database update` above again:
 
 ### Run the app 
 ```bash
-export ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=yami;Username=yami;Password=yami
+export ConnectionStrings__DefaultConnection='Host=localhost;Port=5432;Database=yami;Username=yami;Password=yami'
 dotnet run \
   --project src/Yami.Api/Yami.Api.csproj \
   --environment Development
@@ -57,7 +72,7 @@ curl -v -X POST http://localhost:5000/api/v1/users \
 ```
 
 
-## Run a local PostgreSQ LDB
+## Run a local PostgreSQL DB
 ``` bash
 docker run --name yami-postgres \
   -e POSTGRES_USER=yami \
@@ -68,23 +83,31 @@ docker run --name yami-postgres \
   -d postgres:16
 ```
 
-start stop or remove the DB container
+start, stop or remove the DB container
 ```bash
 docker stop yami-postgres
 docker start yami-postgres
 docker rm -f yami-postgres
 ```
 
-To view data via a GUI, Use a database GUI such as pgAdmin, DBeaver, or TablePlus. Connect with:
+To view data via a GUI; 
+- [Download and install pgadmin](https://www.pgadmin.org/download/)
+- Open pgadmin click on `Add New Server` (picture reference below)
+- Connect with:
 
 ```bash
+Name: Yami
 Host: localhost
 Port: 5432
 Database: yami
 Username: yami
 Password: yami
 ```
+<br>
+<br>
+
+![pgadmin home page](./assets/pgadmin_view.png)
 
 
-
-Please ignore the ./docker/Dokerfile. It's just there as a placeholder for now
+> [!NOTE]
+> Please ignore the ./docker/Dokerfile. It's just there as a placeholder for now

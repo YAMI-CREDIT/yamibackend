@@ -61,4 +61,3 @@ setup_and_run.md
 bin/
 obj/
 notes.cs
-src/Yami.Features/Users/Infrastructure/Data/Migrations/*
