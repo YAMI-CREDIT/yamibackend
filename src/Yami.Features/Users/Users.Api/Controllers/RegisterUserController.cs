@@ -35,9 +35,15 @@ public class RegisterUserController : ControllerBase
         // the registration in the first place.
         if (newUser is null)
         {
-            return Conflict(new { error = "This user is already registered." });
+            return Conflict(new { error = $"This phone number '{phone}' is already registered." });
         }
 
-        return Ok(new { id = newUser.id, phone = newUser.phone, name = newUser.name });
+        return StatusCode(201, new
+        {
+            message = "User registered successfully",
+            id = newUser.id,
+            phone = newUser.phone,
+            name = newUser.name
+        });
     }
 }
