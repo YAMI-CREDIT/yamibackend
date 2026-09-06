@@ -107,7 +107,7 @@ Password: yami
 
 > [!WARNING]
 > This test instructions assumes you are running on a unix compatible setup like macos or linux.
-> If you are running on a windows machine, most commands will work but you may run into friction with some
+> If you are running on a windows machine, most commands will work but you may run into friction with some.
 > You can install wsl to reduce friction. This gives you a linux terminal on windows
 
 The Example flow here is for new user registration but the same flow can be extended to other operations.
