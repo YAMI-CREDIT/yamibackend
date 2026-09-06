@@ -1,10 +1,6 @@
-// This interface is a CONTRACT. It says "any UserService must be able
-// to do this," without saying HOW. This is what lets us swap
-// implementations later (e.g. a fake one for tests) without touching
-// the controller at all.
+// This interface is a CONTRACT for read-only user profile lookups.
+// Signup and authentication live in IAuthService; onboarding/business details in IOnboardingService.
 public interface IUserService
 {
-    // These methods are implemented in UserService.cs
-    Task<User?> RegisterUser(string phone, string name, string userType, string dateOfBirth);
-    Task<User?> GetUser(string id);
+    Task<User?> GetByIdAsync(Guid id);
 }
