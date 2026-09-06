@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 
@@ -13,9 +14,37 @@ public class RegisterUserController : ControllerBase
         _userService = userService;
     }
 
+    [Authorize]         // This ensure ths authorization middleware has run before allowing the rest of the code to continue
     [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
+
+
+
+        // DEBUG: To see every item returned from cognito during authentication verification    
+        // foreach (var claim in User.Claims)
+        // {
+        //     Console.WriteLine($"{claim.Type} = {claim.Value}");
+        // }
+
+
+
+
+
+        // These come from the verified ID token's claims, not from the request body.
+        var sub = User.FindFirst("sub")?.Value;
+        var phoneNumber = User.FindFirst("phone_number")?.Value;
+
+        if (sub is null)
+        {
+            return Unauthorized(new { error = "sub cannot be empty" });
+        }
+
+        if (phoneNumber != request.phone)
+        {
+            return  Unauthorized(new { error = "invalid credentials. Unable to validate phone number" });
+        }
+
         string phone = request.phone;
         string name = request.name;
         string userType = request.userType;
