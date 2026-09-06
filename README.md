@@ -125,7 +125,9 @@ Open another terminal window to configure aws credentials
 - go to the `Sandbox destination phone numbers` section and add your phone number. (picture reference below)
 <br>
 <br>
+
 ![amazon sns sandbox](./assets/amazon_sns_sandbox.png)
+
 <br>
 <br>
 
