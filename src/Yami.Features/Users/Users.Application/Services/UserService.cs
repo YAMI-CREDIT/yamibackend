@@ -25,7 +25,8 @@ public class UserService : IUserService
             phone = phone,
             name = name,
             userType = userType,
-            dateOfBirth = dateOfBirth
+            dateOfBirth = dateOfBirth,
+            CreatedAt = DateTime.UtcNow
         };
 
         _db.Users.Add(newUser);
