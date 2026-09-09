@@ -43,6 +43,7 @@ jobs:
         env:
           BRANCH: ${{ github.ref_name }}
           BASE_VERSION: ${{ steps.gitversion.outputs.majorMinorPatch }}
+        shell: bash
         run: |
           if [ ${BRANCH} != "main" ]; then
             BUILD_VERSION = ${BASE_VERSION}-$(date +'%Y%m%d-%H%M%S')
