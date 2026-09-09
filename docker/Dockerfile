@@ -4,7 +4,7 @@ EXPOSE 8080
 
 WORKDIR /app
 
-COPY /publish .
+COPY publish/ .
 
 RUN useradd yamibackend -u 5017 -s /bin/sh && \
     chown -R yamibackend:yamibackend /app

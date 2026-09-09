@@ -44,12 +44,12 @@ jobs:
           BRANCH: ${{ github.ref_name }}
           BASE_VERSION: ${{ steps.gitversion.outputs.majorMinorPatch }}
         run: |
-          if [ ${BRANCH} != "main" ]; then
-            BUILD_VERSION=${BASE_VERSION}-$(date +'%Y%m%d-%H%M%S')
+          if [ "${BRANCH}" != "main" ]; then
+            BUILD_VERSION="${BASE_VERSION}-$(date +'%Y%m%d-%H%M%S')"
           else
-            BUILD_VERSION=${BASE_VERSION}
+            BUILD_VERSION="${BASE_VERSION}"
           fi
-          echo "build version: ${BASE_VERSION}"
+          echo "build version: ${BUILD_VERSION}"
           echo "BUILD_VERSION=${BUILD_VERSION}" >> "$GITHUB_ENV"
 
       - name: Check .NET SDK Version
@@ -71,6 +71,7 @@ jobs:
       - name: Docker Build and Push
         uses: docker/build-push-action@v7
         with:
+          context: .
           file: docker/Dockerfile
           push: false
           tags: yamicredit/yami/yamibackend:${{env.BUILD_VERSION}}
