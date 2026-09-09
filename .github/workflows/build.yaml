@@ -80,4 +80,4 @@ jobs:
           context: .
           file: docker/Dockerfile
           push: true
-          tags: yamicredit/yami/yamibackend:${{env.BUILD_VERSION}}
+          tags: yamicredit/yamibackend:${{env.BUILD_VERSION}}
