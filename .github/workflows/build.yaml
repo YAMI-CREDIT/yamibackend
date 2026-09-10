@@ -33,12 +33,6 @@ jobs:
         id: gitversion
         uses: gittools/actions/gitversion/execute@v4.7.0
 
-      # - name: Display Build SemVer
-      #   run: |
-      #     echo "SemVer: ${{ steps.gitversion.outputs.semVer }}"
-      #     echo "FullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}"
-      #     echo "MajorMinorPatch: ${{ steps.gitversion.outputs.majorMinorPatch }}"
-
       - name: Set Build Version
         env:
           BRANCH: ${{ github.ref_name }}
