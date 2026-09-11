@@ -72,13 +72,13 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      # - name: Docker Build and Push
-      #   uses: docker/build-push-action@v7
-      #   with:
-      #     context: .
-      #     file: docker/Dockerfile
-      #     push: true
-      #     tags: yamicredit/yamibackend:${{env.BUILD_VERSION}}
+      - name: Docker Build and Push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: yamicredit/yamibackend:${{env.BUILD_VERSION}}
 
   deploy_on_northflank:
     needs: build
@@ -107,5 +107,5 @@ jobs:
           echo ""
           echo "deployment payload:"
           echo ${PAYLOAD}
-          # echo "======== Deploying image to Northflank ========"
-          # northflank update service deployment --serviceId 'yamibackend' --projectId 'yamibackend' -i '${PAYLOAD}'
+          echo "======== Deploying image to Northflank ========"
+          northflank update service deployment --serviceId 'yamibackend' --projectId 'yamibackend' -i '${PAYLOAD}'
