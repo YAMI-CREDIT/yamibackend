@@ -1,8 +1,12 @@
 # yamibackend
 Repository to host yami backend.
 
+## How to test live cloud hosted service using swagger
+https://p01--yamibackend--phqxfvgnqz84.code.run/swagger/index.html
 
-## Development setup
+Make sure you retrieve an authentication token as described in the [cognito section](#setup-authentication-with-cognito). Then you can authenticate on swagger by clicking `Authorize` and pasting your token. After authentication, you can send your API requests to test functionality. Your token will last for an hour.
+
+## Local development setup
 
 ### The EF Core CLI Tool
 `dotnet-ef` is a command line tool that runs on your machine to generate migration files. Install it using the command below.
@@ -118,7 +122,8 @@ Pre requisites
 - run `dotnet ef database update` as described above
 - run the app with `dotnet run` as described above
 
-Open another terminal window to configure aws credentials
+### Setup authentication with cognito
+Open a new terminal window to configure aws credentials
 - install aws cli
 - run aws login and follow the link provided
 - on the aws website, go to `Amazon SNS`. You can type it into the search bar at the top left for quick navigation
@@ -165,11 +170,12 @@ aws cognito-idp initiate-auth \
 export TOKEN=$(cat tokens.json | jq -r .AuthenticationResult.IdToken)
 ```
 
-- if you want, you can examine the token using
+- if you need to, you can reveal the token using;
 ```bash
 echo $TOKEN
 ```
-- try to register yourself on the backend by using
+- if you want to test on the live developement service, follow the instructions [here](#how-to-test-live-cloud-hosted-service-using-swagger)
+- If you are testing locally, try to register yourself on your local service by using;
 ```bash
 curl -v -X POST http://localhost:5000/api/v1/users \
   -H "Content-Type: application/json" \
@@ -177,7 +183,4 @@ curl -v -X POST http://localhost:5000/api/v1/users \
   -d '{"phone": "+234_PHONE_NUMBER", "name": "Any Name", "userType": "wholesaler", "dateOfBirth": "13-03-1974"}'
 ```
 - you should get a `User registered successfully` response message and the user will be visible in the database
-- If you send the same curl request again, you should get a `This phone number is already registered` error.
-
-> [!NOTE]
-> Please ignore the ./docker/Dokerfile. It's just there as a placeholder for now
+- If you send the api request again with the same data, you should get a `This phone number is already registered` error.
