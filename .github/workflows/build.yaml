@@ -99,7 +99,7 @@ jobs:
         env:
           BUILD_VERSION: ${{ needs.build.outputs.BUILD_VERSION }}
         run: |
-            PAYLOAD='{"external": {"imagePath": "yamicredit/yamibackend:0.0.1-20260910-225523"},"docker": {"configType": "default"}}'
+            PAYLOAD='{"external": {"imagePath": "yamicredit/yamibackend:${BUILD_VERSION}"},"docker": {"configType": "default"}}'
             echo "PAYLOAD=${PAYLOAD}">> "$GITHUB_ENV"
 
       - name: Deploy to Northflank
@@ -107,5 +107,5 @@ jobs:
           echo ""
           echo "deployment payload:"
           echo ${PAYLOAD}
-          # echo "======== Deploying image to Northflank ========"
-          # northflank update service deployment --serviceId 'yamibackend' --projectId 'yamibackend' -i '${PAYLOAD}'
+          echo "======== Deploying image to Northflank ========"
+          northflank update service deployment --serviceId 'yamibackend' --projectId 'yamibackend' -i '${PAYLOAD}'
