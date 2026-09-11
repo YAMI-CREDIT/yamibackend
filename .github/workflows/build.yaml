@@ -18,6 +18,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      BUILD_VERSION: ${{ steps.set_build_version.outputs.BUILD_VERSION }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -34,6 +36,7 @@ jobs:
         uses: gittools/actions/gitversion/execute@v4.7.0
 
       - name: Set Build Version
+        id: set_build_version
         env:
           BRANCH: ${{ github.ref_name }}
           BASE_VERSION: ${{ steps.gitversion.outputs.majorMinorPatch }}
@@ -45,6 +48,7 @@ jobs:
           fi
           echo "build version: ${BUILD_VERSION}"
           echo "BUILD_VERSION=${BUILD_VERSION}" >> "$GITHUB_ENV"
+          echo "BUILD_VERSION=${BUILD_VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Check .NET SDK Version
         run: dotnet --version
@@ -75,3 +79,42 @@ jobs:
           file: docker/Dockerfile
           push: true
           tags: yamicredit/yamibackend:${{env.BUILD_VERSION}}
+
+  deploy_on_northflank:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      
+      - name: Install Northflank CLI
+        run: npm i -g --no-audit --no-fund @northflank/cli
+
+      - name: Login to Northflank
+        run: northflank login --token-login -t ${{ secrets.NORTHFLANK_TOKEN }}
+
+      - name: Create Deployment Payload
+        env:
+          BUILD_VERSION: ${{ needs.build.outputs.BUILD_VERSION }}
+        run: |
+            PAYLOAD=$(cat <<EOF
+            {
+              "external": {
+                "imagePath": "yamicredit/yamibackend:${BUILD_VERSION}"
+              },
+              "docker": {
+                "configType": "default"
+              }
+            }
+            EOF
+            ) >> "$GITHUB_ENV"
+
+      - name: Deploy to Northflank
+        run: |
+          echo ""
+          echo "deployment payload:"
+          echo ${PAYLOAD}
+          echo "======== Deploying image to Northflank ========"
+          northflank update service deployment --serviceId 'yamibackend' --projectId 'yamibackend' -i '${PAYLOAD}'
