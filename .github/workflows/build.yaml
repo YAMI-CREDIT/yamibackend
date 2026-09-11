@@ -108,4 +108,6 @@ jobs:
           echo "deployment payload:"
           echo ${PAYLOAD}
           echo "======== Deploying image to Northflank ========"
-          northflank patch service deployment --serviceId "yamibackend" --projectId "yamibackend" -i "${PAYLOAD}"
+          northflank update service deployment --serviceId "yamibackend" --projectId "yamibackend" -i "${PAYLOAD}"
+# northflank update service is deprecated but the replacement "patch" command returns too much noise          
+#          northflank patch service deployment --serviceId "yamibackend" --projectId "yamibackend" -i "${PAYLOAD}"          
