@@ -1,7 +1,7 @@
 # yamibackend
 Repository to host yami backend.
 
-## Live cloud hosted swagger link
+## How to test live cloud hosted service using swagger
 https://p01--yamibackend--phqxfvgnqz84.code.run/swagger/index.html
 
 Make sure you retrieve an authentication token as described in the [cognito section](#test-how-this-setup-is-wired-with-cognito). Then you can authenticate on swagger by clicking `Authorize` and pasting your token. After authentication, you can send your API requests to test functionality. Your token will last for an hour.
