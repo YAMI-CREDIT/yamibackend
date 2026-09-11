@@ -108,4 +108,4 @@ jobs:
           echo "deployment payload:"
           echo ${PAYLOAD}
           echo "======== Deploying image to Northflank ========"
-          northflank update service deployment --serviceId "yamibackend" --projectId "yamibackend" -i "${PAYLOAD}""
+          northflank update service deployment --serviceId "yamibackend" --projectId "yamibackend" -i "${PAYLOAD}"
