@@ -1,8 +1,12 @@
 # yamibackend
 Repository to host yami backend.
 
+## Live cloud hosted swagger link
+https://p01--yamibackend--phqxfvgnqz84.code.run/swagger/index.html
 
-## Development setup
+Make sure you retrieve an authentication token as described in the [cognito section](#test-how-this-setup-is-wired-with-cognito). Then you can authenticate on swagger by clicking `Authorize` and pasting your token. After authentication, you can send your API requests to test functionality. Your token will last for an hour.
+
+## Local development setup
 
 ### The EF Core CLI Tool
 `dotnet-ef` is a command line tool that runs on your machine to generate migration files. Install it using the command below.
@@ -178,6 +182,3 @@ curl -v -X POST http://localhost:5000/api/v1/users \
 ```
 - you should get a `User registered successfully` response message and the user will be visible in the database
 - If you send the same curl request again, you should get a `This phone number is already registered` error.
-
-> [!NOTE]
-> Please ignore the ./docker/Dokerfile. It's just there as a placeholder for now
