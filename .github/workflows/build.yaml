@@ -109,12 +109,13 @@ jobs:
               }
             }
             EOF
-            ) >> "$GITHUB_ENV"
+            )
+            echo "PAYLOAD=${PAYLOAD}">> "$GITHUB_ENV"
 
       - name: Deploy to Northflank
         run: |
           echo ""
           echo "deployment payload:"
           echo ${PAYLOAD}
-          echo "======== Deploying image to Northflank ========"
-          northflank update service deployment --serviceId 'yamibackend' --projectId 'yamibackend' -i '${PAYLOAD}'
+          # echo "======== Deploying image to Northflank ========"
+          # northflank update service deployment --serviceId 'yamibackend' --projectId 'yamibackend' -i '${PAYLOAD}'
