@@ -47,18 +47,23 @@ public class RegisterUserController : ControllerBase
 
         string phone = request.phone;
         string name = request.name;
-        string userType = request.userType;
-        string dateOfBirth = request.dateOfBirth;
+        string? email = request.email;
+        string? businessName = request.businessName;
+        string? area = request.area;
+        string? identityType = request.identityType;
+        string? identityNumber =request.identityNumber;
+        string? userType = request.userType;
+        string? dateOfBirth = request.dateOfBirth;
 
-        if (string.IsNullOrWhiteSpace(phone) ||
-            string.IsNullOrWhiteSpace(name) ||
-            string.IsNullOrWhiteSpace(userType) ||
-            string.IsNullOrWhiteSpace(dateOfBirth))
+        if (string.IsNullOrWhiteSpace(phone) || string.IsNullOrWhiteSpace(name))
         {
-            return BadRequest(new { error = "phone, name , userType and dateOfBirth are required." });
+            return BadRequest(new { error = "phone number and name are required." });
         }
 
-        var newUser = await _userService.RegisterUser(phone, name, userType, dateOfBirth);
+        var newUser = await _userService.RegisterUser(
+            phone, name, email,
+            businessName, area, identityType,
+            identityNumber, userType, dateOfBirth);
 
         // I would not expect us to fufil this condition as cognito should not allow
         // the registration in the first place.

@@ -30,8 +30,22 @@ namespace Users.EFInfrastructure.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("area")
+                        .HasColumnType("text");
+
+                    b.Property<string>("businessName")
+                        .HasColumnType("text");
+
                     b.Property<string>("dateOfBirth")
-                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("email")
+                        .HasColumnType("text");
+
+                    b.Property<string>("identityNumber")
+                        .HasColumnType("text");
+
+                    b.Property<string>("identityType")
                         .HasColumnType("text");
 
                     b.Property<string>("name")
@@ -43,7 +57,6 @@ namespace Users.EFInfrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("userType")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("id");
