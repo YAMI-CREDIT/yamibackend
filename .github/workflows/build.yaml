@@ -81,7 +81,7 @@ jobs:
           context: .
           file: docker/Dockerfile
           push: true
-          tags: yamicredit/yamibackend:${{env.BUILD_VERSION}}
+          tags: yamicredit/yamibackend:${{ env.BUILD_VERSION }}
 
   deploy_on_northflank:
     if: github.event_name != 'pull_request'
