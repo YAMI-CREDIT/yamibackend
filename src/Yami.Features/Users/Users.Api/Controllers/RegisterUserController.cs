@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Http;
 
 [ApiController]
 [ApiVersion("1.0")]
@@ -13,23 +14,18 @@ public class RegisterUserController : ControllerBase
     {
         _userService = userService;
     }
-
-    [Authorize]         // This ensure ths authorization middleware has run before allowing the rest of the code to continue
+    
     [HttpPost]
+    [Authorize]         // This ensure ths authorization middleware has run before allowing the rest of the code to continue
+    [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
-
-
 
         // DEBUG: To see every item returned from cognito during authentication verification    
         // foreach (var claim in User.Claims)
         // {
         //     Console.WriteLine($"{claim.Type} = {claim.Value}");
         // }
-
-
-
-
 
         // These come from the verified ID token's claims, not from the request body.
         var sub = User.FindFirst("sub")?.Value;
@@ -72,12 +68,12 @@ public class RegisterUserController : ControllerBase
             return Conflict(new { error = $"This phone number '{phone}' is already registered." });
         }
 
-        return StatusCode(201, new
+        var response = new RegisterUserResponse
         {
             message = "User registered successfully",
-            id = newUser.id,
-            phone = newUser.phone,
-            name = newUser.name
-        });
+            id = newUser.id, 
+        };
+
+        return StatusCode(201, response);
     }
 }
