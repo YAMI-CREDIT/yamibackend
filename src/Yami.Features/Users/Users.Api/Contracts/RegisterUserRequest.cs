@@ -7,6 +7,7 @@ public class RegisterUserRequest
     public string name { get; set; }
     public string? email { get; set; }
     public string? businessName { get; set; }
+    public string? cacNo { get; set; }
     public string? area { get; set; }
     public string? identityType { get; set; }
     public string? identityNumber  { get; set; }

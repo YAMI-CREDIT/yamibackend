@@ -12,8 +12,8 @@ public class UserService : IUserService
     // This is the actual Registration logic
     public async Task<User?> RegisterUser(
         string phone, string name, string? email,
-        string? businessName, string? area, string? identityType,
-        string? identityNumber, string? userType, string? dateOfBirth)
+        string? area, string? identityType, string? identityNumber,
+        string? userType, string? dateOfBirth)
     {
         bool alreadyExists = await _db.Users
             .AnyAsync(u => u.phone == phone);
@@ -28,7 +28,7 @@ public class UserService : IUserService
             phone = phone,
             name = name,
             email = email,
-            businessName = businessName,
+            // businessName = businessName,
             area = area,
             identityType = identityType,
             identityNumber = identityNumber,
