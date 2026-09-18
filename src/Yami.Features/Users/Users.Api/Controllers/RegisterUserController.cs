@@ -86,7 +86,7 @@ public class RegisterUserController : ControllerBase
             if (newBusiness is null)
             {
                 return Conflict(new {
-                    error = $"User registered, but the business '{businessName}' was previously registered. Userid: {newUser.id}",
+                    error = $"User registered, but the business '{businessName}' was previously registered.",
                     userId = newUser.id,
                     business = businessName
                 });
