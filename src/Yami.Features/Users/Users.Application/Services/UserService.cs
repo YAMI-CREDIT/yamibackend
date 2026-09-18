@@ -11,7 +11,7 @@ public class UserService : IUserService
 
     // This is the actual Registration logic
     public async Task<User?> RegisterUser(
-        string phone, string name, string? email,
+        string phone, string name, string userSubId, string? email,
         string? area, string? identityType, string? identityNumber,
         string? userType, string? dateOfBirth)
     {
@@ -27,8 +27,8 @@ public class UserService : IUserService
         {
             phone = phone,
             name = name,
+            userSubId = userSubId,
             email = email,
-            // businessName = businessName,
             area = area,
             identityType = identityType,
             identityNumber = identityNumber,

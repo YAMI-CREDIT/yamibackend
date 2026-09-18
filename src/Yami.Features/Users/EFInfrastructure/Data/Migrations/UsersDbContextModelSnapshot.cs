@@ -53,6 +53,10 @@ namespace Users.EFInfrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("userSubId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("userType")
                         .HasColumnType("text");
 

@@ -61,7 +61,7 @@ public class RegisterUserController : ControllerBase
 
 
         var newUser = await _userService.RegisterUser(
-            phone, name, email,
+            phone, name, sub, email,
             area, identityType,
             identityNumber, userType, dateOfBirth);
 
