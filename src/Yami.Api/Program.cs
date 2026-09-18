@@ -20,6 +20,7 @@ var authority = $"https://cognito-idp.{awsRegion}.amazonaws.com/{userPoolId}";
 
 builder.Services.AddUsers(builder.Configuration);
 builder.Services.AddBusinesses(builder.Configuration);
+builder.Services.AddAgreements(builder.Configuration);
 
 builder.Services.AddApiVersioning(options =>
 {

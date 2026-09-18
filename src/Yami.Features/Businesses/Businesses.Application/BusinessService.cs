@@ -27,7 +27,7 @@ public class BusinessService : IBusinessService
             userId = userId,
             registrationNo = registrationNo, 
             area = area,
-            CreatedAt = DateTime.UtcNow
+            createdAt = DateTime.UtcNow
         };
 
         _db.Businesses.Add(newBusiness);

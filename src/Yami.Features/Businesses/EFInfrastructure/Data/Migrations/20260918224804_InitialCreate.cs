@@ -20,7 +20,7 @@ namespace Businesses.EFInfrastructure.Data.Migrations
                     userId = table.Column<string>(type: "text", nullable: false),
                     registrationNo = table.Column<string>(type: "text", nullable: true),
                     area = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    createdAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {

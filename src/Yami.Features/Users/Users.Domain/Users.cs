@@ -11,5 +11,5 @@ public class User
     public string? identityNumber { get; set; }
     public string? userType { get; set; }
     public string? dateOfBirth { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime createdAt { get; set; }
 }

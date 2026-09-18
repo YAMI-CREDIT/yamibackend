@@ -8,10 +8,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Businesses.EFInfrastructure.Data.Migrations
+namespace Agreements.EFInfrastructure.Data.Migrations
 {
-    [DbContext(typeof(BusinessesDbContext))]
-    [Migration("20260917233337_InitialCreate")]
+    [DbContext(typeof(AgreementsDbContext))]
+    [Migration("20260918224909_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -24,33 +24,45 @@ namespace Businesses.EFInfrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Business", b =>
+            modelBuilder.Entity("Agreement", b =>
                 {
                     b.Property<Guid>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<decimal?>("amountPaid")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("amountTotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("createdAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("area")
+                    b.Property<Guid>("creditorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("creditorName")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("name")
+                    b.Property<Guid>("debtorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("debtorName")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("registrationNo")
-                        .HasColumnType("text");
+                    b.Property<DateTime>("dueDate")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("userId")
+                    b.Property<string>("title")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("id");
 
-                    b.ToTable("Businesses");
+                    b.ToTable("Agreements");
                 });
 #pragma warning restore 612, 618
         }

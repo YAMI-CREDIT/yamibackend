@@ -34,7 +34,7 @@ public class UserService : IUserService
             identityNumber = identityNumber,
             userType = userType,
             dateOfBirth = dateOfBirth,
-            CreatedAt = DateTime.UtcNow
+            createdAt = DateTime.UtcNow
         };
 
         _db.Users.Add(newUser);
@@ -45,7 +45,7 @@ public class UserService : IUserService
 
     // This logic is an example to get user details from dB.
     // I'll leave the full implementation till later
-    public async Task<User?> GetUser(string id)
+    public async Task<User?> GetUser(Guid id)
     {
         Console.WriteLine($"Getting user by ID: {id}");
         return await _db.Users.FindAsync(id);

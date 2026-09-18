@@ -27,11 +27,11 @@ namespace Users.EFInfrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("area")
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("dateOfBirth")
                         .HasColumnType("text");
