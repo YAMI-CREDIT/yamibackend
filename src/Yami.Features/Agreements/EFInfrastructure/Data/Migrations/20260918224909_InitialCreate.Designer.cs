@@ -2,17 +2,20 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Users.EFInfrastructure.Data.Migrations
+namespace Agreements.EFInfrastructure.Data.Migrations
 {
-    [DbContext(typeof(UsersDbContext))]
-    partial class UsersDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(AgreementsDbContext))]
+    [Migration("20260918224909_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,48 +24,45 @@ namespace Users.EFInfrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("User", b =>
+            modelBuilder.Entity("Agreement", b =>
                 {
                     b.Property<Guid>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("area")
-                        .HasColumnType("text");
+                    b.Property<decimal?>("amountPaid")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("amountTotal")
+                        .HasColumnType("numeric");
 
                     b.Property<DateTime>("createdAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("dateOfBirth")
-                        .HasColumnType("text");
+                    b.Property<Guid>("creditorId")
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("email")
-                        .HasColumnType("text");
-
-                    b.Property<string>("identityNumber")
-                        .HasColumnType("text");
-
-                    b.Property<string>("identityType")
-                        .HasColumnType("text");
-
-                    b.Property<string>("name")
+                    b.Property<string>("creditorName")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("phone")
+                    b.Property<Guid>("debtorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("debtorName")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("userSubId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<DateTime>("dueDate")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("userType")
+                    b.Property<string>("title")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Agreements");
                 });
 #pragma warning restore 612, 618
         }

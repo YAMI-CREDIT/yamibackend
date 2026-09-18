@@ -7,10 +7,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Users.EFInfrastructure.Data.Migrations
+namespace Businesses.EFInfrastructure.Data.Migrations
 {
-    [DbContext(typeof(UsersDbContext))]
-    partial class UsersDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(BusinessesDbContext))]
+    partial class BusinessesDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -21,48 +21,33 @@ namespace Users.EFInfrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("User", b =>
+            modelBuilder.Entity("Business", b =>
                 {
                     b.Property<Guid>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("area")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("createdAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("dateOfBirth")
-                        .HasColumnType("text");
-
-                    b.Property<string>("email")
-                        .HasColumnType("text");
-
-                    b.Property<string>("identityNumber")
-                        .HasColumnType("text");
-
-                    b.Property<string>("identityType")
-                        .HasColumnType("text");
-
                     b.Property<string>("name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("phone")
-                        .IsRequired()
+                    b.Property<string>("registrationNo")
                         .HasColumnType("text");
 
-                    b.Property<string>("userSubId")
+                    b.Property<string>("userId")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("userType")
                         .HasColumnType("text");
 
                     b.HasKey("id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Businesses");
                 });
 #pragma warning restore 612, 618
         }

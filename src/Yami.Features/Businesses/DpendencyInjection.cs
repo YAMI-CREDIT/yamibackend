@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-public static class AgreementsModule
+public static class BusinessesModule
 {
-    public static IServiceCollection AddAgreements(
+    public static IServiceCollection AddBusinesses(
         this IServiceCollection services,
         IConfiguration configuration)
     {
@@ -18,10 +18,13 @@ public static class AgreementsModule
                 "Database connection string is missing.");
         }
 
-        services.AddDbContext<AgreementsDbContext>(options =>
+        services.AddDbContext<BusinessesDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        services.AddScoped<IAgreementService, AgreementService>();
+        services.AddScoped<IBusinessService, BusinessService>();
+
+        // services.AddControllers()
+        //     .AddApplicationPart(typeof(RegisterBusinessController).Assembly);
 
         return services;
     }

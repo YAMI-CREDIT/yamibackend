@@ -1,5 +1,7 @@
 public class RegisterUserResponse
 {   
-    public string message { get; set; }
-    public Guid id { get; set; }
+    public bool userCreated { get; set; }
+    public bool? businessCreated { get; set; }
+    public Guid userId { get; set; }
+    public Guid? businessId { get; set; }
 }

@@ -13,6 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Yami.Features\Businesses\Businesses.csproj" />
+    <ProjectReference Include="..\..\Yami.Features\Agreements\Agreements.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>  
 

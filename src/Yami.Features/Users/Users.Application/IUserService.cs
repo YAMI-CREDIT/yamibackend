@@ -6,8 +6,8 @@ public interface IUserService
 {
     // These methods are implemented in UserService.cs
     Task<User?> RegisterUser(
-        string phone, string name, string? email,
-        string? businessName, string? area, string? identityType,
-        string? identityNumber, string? userType, string? dateOfBirth);
-    Task<User?> GetUser(string id);
+        string phone, string name, string userSubId, string? email,
+        string? area, string? identityType,string?identityNumber,
+        string? userType, string? dateOfBirth);
+    Task<User?> GetUser(Guid id);
 }

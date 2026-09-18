@@ -62,3 +62,6 @@ bin/
 obj/
 notes.cs
 publish
+.DS_Store
+tokens.json
+GetUserRequest.cs

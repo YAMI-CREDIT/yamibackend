@@ -11,9 +11,9 @@ public class UserService : IUserService
 
     // This is the actual Registration logic
     public async Task<User?> RegisterUser(
-        string phone, string name, string? email,
-        string? businessName, string? area, string? identityType,
-        string? identityNumber, string? userType, string? dateOfBirth)
+        string phone, string name, string userSubId, string? email,
+        string? area, string? identityType, string? identityNumber,
+        string? userType, string? dateOfBirth)
     {
         bool alreadyExists = await _db.Users
             .AnyAsync(u => u.phone == phone);
@@ -27,14 +27,14 @@ public class UserService : IUserService
         {
             phone = phone,
             name = name,
+            userSubId = userSubId,
             email = email,
-            businessName = businessName,
             area = area,
             identityType = identityType,
             identityNumber = identityNumber,
             userType = userType,
             dateOfBirth = dateOfBirth,
-            CreatedAt = DateTime.UtcNow
+            createdAt = DateTime.UtcNow
         };
 
         _db.Users.Add(newUser);
@@ -45,7 +45,7 @@ public class UserService : IUserService
 
     // This logic is an example to get user details from dB.
     // I'll leave the full implementation till later
-    public async Task<User?> GetUser(string id)
+    public async Task<User?> GetUser(Guid id)
     {
         Console.WriteLine($"Getting user by ID: {id}");
         return await _db.Users.FindAsync(id);

@@ -9,10 +9,12 @@ using Microsoft.AspNetCore.Http;
 public class RegisterUserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IBusinessService _businessService;
 
-    public RegisterUserController(IUserService userService)
+    public RegisterUserController(IUserService userService, IBusinessService businessService)
     {
         _userService = userService;
+        _businessService = businessService;
     }
     
     [HttpPost]
@@ -45,6 +47,7 @@ public class RegisterUserController : ControllerBase
         string name = request.name;
         string? email = request.email;
         string? businessName = request.businessName;
+        string? cacNo = request.cacNo;
         string? area = request.area;
         string? identityType = request.identityType;
         string? identityNumber =request.identityNumber;
@@ -56,9 +59,10 @@ public class RegisterUserController : ControllerBase
             return BadRequest(new { error = "phone number and name are required." });
         }
 
+
         var newUser = await _userService.RegisterUser(
-            phone, name, email,
-            businessName, area, identityType,
+            phone, name, sub, email,
+            area, identityType,
             identityNumber, userType, dateOfBirth);
 
         // I would not expect us to fufil this condition as cognito should not allow
@@ -68,10 +72,34 @@ public class RegisterUserController : ControllerBase
             return Conflict(new { error = $"This phone number '{phone}' is already registered." });
         }
 
+        Business? newBusiness = null;
+
+        if (!string.IsNullOrWhiteSpace(businessName))
+        {
+            // string name = businessName;
+            string userId = newUser.id.ToString();
+            string? registrationNo = cacNo;
+            newBusiness = await _businessService.RegisterBusiness(
+                businessName, userId, registrationNo, area
+            );
+
+            if (newBusiness is null)
+            {
+                return Conflict(new {
+                    error = $"User registered, but the business '{businessName}' was previously registered.",
+                    userId = newUser.id,
+                    business = businessName
+                });
+            }
+
+        }
+
         var response = new RegisterUserResponse
         {
-            message = "User registered successfully",
-            id = newUser.id, 
+            userCreated = true,
+            businessCreated = newBusiness != null,
+            userId = newUser.id,
+            businessId = newBusiness?.id
         };
 
         return StatusCode(201, response);
