@@ -53,12 +53,18 @@ namespace Users.EFInfrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("termsAccepted")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("userSubId")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("userType")
                         .HasColumnType("text");
+
+                    b.Property<bool>("verified")
+                        .HasColumnType("boolean");
 
                     b.HasKey("id");
 

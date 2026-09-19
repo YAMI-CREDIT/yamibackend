@@ -46,12 +46,13 @@ public class RegisterUserController : ControllerBase
         string phone = request.phone;
         string name = request.name;
         string? email = request.email;
-        string? businessName = request.businessName;
-        string? cacNo = request.cacNo;
-        string? area = request.area;
-        string? identityType = request.identityType;
-        string? identityNumber =request.identityNumber;
-        string? userType = request.userType;
+        bool termsAccepted = true;
+        string? businessName = null;
+        string? cacNo = null;
+        string? area = null;
+        string? identityType = null;
+        string? identityNumber = null;
+        string? userType = null;
         string? dateOfBirth = request.dateOfBirth;
 
         if (string.IsNullOrWhiteSpace(phone) || string.IsNullOrWhiteSpace(name))
@@ -61,9 +62,9 @@ public class RegisterUserController : ControllerBase
 
 
         var newUser = await _userService.RegisterUser(
-            phone, name, sub, email,
-            area, identityType,
-            identityNumber, userType, dateOfBirth);
+            phone, name, sub, dateOfBirth, email,
+            termsAccepted, area, identityType,
+            identityNumber, userType);
 
         // I would not expect us to fufil this condition as cognito should not allow
         // the registration in the first place.
@@ -72,34 +73,32 @@ public class RegisterUserController : ControllerBase
             return Conflict(new { error = $"This phone number '{phone}' is already registered." });
         }
 
-        Business? newBusiness = null;
+        // Business? newBusiness = null;
 
-        if (!string.IsNullOrWhiteSpace(businessName))
-        {
-            // string name = businessName;
-            string userId = newUser.id.ToString();
-            string? registrationNo = cacNo;
-            newBusiness = await _businessService.RegisterBusiness(
-                businessName, userId, registrationNo, area
-            );
+        // if (!string.IsNullOrWhiteSpace(businessName))
+        // {
+        //     // string name = businessName;
+        //     string userId = newUser.id.ToString();
+        //     string? registrationNo = cacNo;
+        //     newBusiness = await _businessService.RegisterBusiness(
+        //         businessName, userId, registrationNo, area
+        //     );
 
-            if (newBusiness is null)
-            {
-                return Conflict(new {
-                    error = $"User registered, but the business '{businessName}' was previously registered.",
-                    userId = newUser.id,
-                    business = businessName
-                });
-            }
+        //     if (newBusiness is null)
+        //     {
+        //         return Conflict(new {
+        //             error = $"User registered, but the business '{businessName}' was previously registered.",
+        //             userId = newUser.id,
+        //             business = businessName
+        //         });
+        //     }
 
-        }
+        // }
 
         var response = new RegisterUserResponse
         {
             userCreated = true,
-            businessCreated = newBusiness != null,
             userId = newUser.id,
-            businessId = newBusiness?.id
         };
 
         return StatusCode(201, response);

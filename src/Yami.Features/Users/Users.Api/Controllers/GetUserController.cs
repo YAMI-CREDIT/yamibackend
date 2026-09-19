@@ -36,9 +36,16 @@ public class GetUserController : ControllerBase
             return Unauthorized(new { error = "unauthorized" });
         }
 
-        var userAgreements = await _agreementService.GetAgreements(creditorId: id);
+        var userAssets = await _agreementService.GetAgreements(creditorId: id);
 
-        if (userAgreements is null)
+        if (userAssets is null)
+        {
+            return BadRequest(new { error = "agreement id, creditor id or debtor id is required." });
+        }
+
+        var userDebts = await _agreementService.GetAgreements(debtorId: id);
+
+        if (userDebts is null)
         {
             return BadRequest(new { error = "agreement id, creditor id or debtor id is required." });
         }
@@ -46,7 +53,8 @@ public class GetUserController : ControllerBase
         var response = new GetUserResponse
         {
             name = user.name,
-            agreements = userAgreements
+            debts = userDebts,
+            assets = userAssets
         };
 
         return Ok(response);

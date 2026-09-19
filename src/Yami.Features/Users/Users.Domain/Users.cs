@@ -6,10 +6,12 @@ public class User
     public string name { get; set; }
     public string userSubId { get; set; } // This is the Cognito user sub, which is a unique identifier for the user in Cognito
     public string? email { get; set; }
+    public bool termsAccepted { get; set; }
     public string? area { get; set; }
     public string? identityType { get; set; }
     public string? identityNumber { get; set; }
     public string? userType { get; set; }
     public string? dateOfBirth { get; set; }
     public DateTime createdAt { get; set; }
+    public bool verified { get; set; }
 }

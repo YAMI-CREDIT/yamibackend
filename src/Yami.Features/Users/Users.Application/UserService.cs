@@ -11,9 +11,10 @@ public class UserService : IUserService
 
     // This is the actual Registration logic
     public async Task<User?> RegisterUser(
-        string phone, string name, string userSubId, string? email,
-        string? area, string? identityType, string? identityNumber,
-        string? userType, string? dateOfBirth)
+        string phone, string name, string userSubId, string? dateOfBirth,
+        string? email, bool termsAccepted=true, string? area=null,
+        string? identityType=null, string? identityNumber=null,
+        string? userType=null)
     {
         bool alreadyExists = await _db.Users
             .AnyAsync(u => u.phone == phone);
@@ -29,12 +30,14 @@ public class UserService : IUserService
             name = name,
             userSubId = userSubId,
             email = email,
+            termsAccepted=termsAccepted,
             area = area,
             identityType = identityType,
             identityNumber = identityNumber,
             userType = userType,
             dateOfBirth = dateOfBirth,
-            createdAt = DateTime.UtcNow
+            createdAt = DateTime.UtcNow,
+            verified = false
         };
 
         _db.Users.Add(newUser);

@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Users.EFInfrastructure.Data.Migrations
 {
     [DbContext(typeof(UsersDbContext))]
-    [Migration("20260918224637_InitialCreate")]
+    [Migration("20260919163829_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -56,12 +56,18 @@ namespace Users.EFInfrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("termsAccepted")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("userSubId")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("userType")
                         .HasColumnType("text");
+
+                    b.Property<bool>("verified")
+                        .HasColumnType("boolean");
 
                     b.HasKey("id");
 
