@@ -73,27 +73,27 @@ public class RegisterUserController : ControllerBase
             return Conflict(new { error = $"This phone number '{phone}' is already registered." });
         }
 
-        // Business? newBusiness = null;
+        Business? newBusiness = null;
 
-        // if (!string.IsNullOrWhiteSpace(businessName))
-        // {
-        //     // string name = businessName;
-        //     string userId = newUser.id.ToString();
-        //     string? registrationNo = cacNo;
-        //     newBusiness = await _businessService.RegisterBusiness(
-        //         businessName, userId, registrationNo, area
-        //     );
+        if (!string.IsNullOrWhiteSpace(businessName))
+        {
+            // string name = businessName;
+            string userId = newUser.id.ToString();
+            string? registrationNo = cacNo;
+            newBusiness = await _businessService.RegisterBusiness(
+                businessName, userId, registrationNo, area
+            );
 
-        //     if (newBusiness is null)
-        //     {
-        //         return Conflict(new {
-        //             error = $"User registered, but the business '{businessName}' was previously registered.",
-        //             userId = newUser.id,
-        //             business = businessName
-        //         });
-        //     }
+            if (newBusiness is null)
+            {
+                return Conflict(new {
+                    error = $"User registered, but the business '{businessName}' was previously registered.",
+                    userId = newUser.id,
+                    business = businessName
+                });
+            }
 
-        // }
+        }
 
         var response = new RegisterUserResponse
         {
