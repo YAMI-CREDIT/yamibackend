@@ -6,5 +6,6 @@ public class Business
     public string? registrationNo { get; set; }
     public string area { get; set; }
     public DateTime createdAt { get; set; }
+    public bool verified { get; set; }
 
 }

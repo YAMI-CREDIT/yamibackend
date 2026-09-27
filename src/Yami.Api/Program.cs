@@ -21,6 +21,7 @@ var authority = $"https://cognito-idp.{awsRegion}.amazonaws.com/{userPoolId}";
 builder.Services.AddUsers(builder.Configuration);
 builder.Services.AddBusinesses(builder.Configuration);
 builder.Services.AddAgreements(builder.Configuration);
+builder.Services.AddKyc(builder.Configuration);
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -69,6 +70,23 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+// CORS: allow the frontend origin(s) from appsettings.json to call the API.
+// The Authorization header is covered by AllowAnyHeader; AllowCredentials is
+// included for cookie based auth (if we ever add session cookies).
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? [];
+
+        policy.WithOrigins(origins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // configure swagger
 builder.Services.AddSwaggerGen(options =>
 {
@@ -112,6 +130,11 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Yami API v1");
     });
 }
+
+// CORS must run BEFORE authentication: the browser's preflight (OPTIONS)
+// request carries no Authorization header, so if auth ran first the
+// preflight would be rejected with 401 and the real request would never fire.
+app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

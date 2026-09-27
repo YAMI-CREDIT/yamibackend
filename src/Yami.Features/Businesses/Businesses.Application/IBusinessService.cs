@@ -4,4 +4,5 @@ public interface IBusinessService
         string name, string userId,
         string? registrationNo, string area);
     Task<Business?> GetBusiness(string id);
+    Task<bool> SetVerified(Guid id, bool verified);
 }

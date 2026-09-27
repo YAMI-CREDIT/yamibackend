@@ -9,6 +9,7 @@
   
   <ItemGroup>
     <ProjectReference Include="../Yami.Features/Users/Users.csproj" />
+    <ProjectReference Include="../Yami.Features/Kyc/kyc.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.4" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
