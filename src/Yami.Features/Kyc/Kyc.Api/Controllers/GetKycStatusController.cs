@@ -20,7 +20,7 @@ public class GetKycStatusController : ControllerBase
         _businessService = businessService;
     }
 
-    [HttpGet("{entityId}/{entityType}")]
+    [HttpGet("{entityType}/{entityId}")]
     [Authorize]
     [ProducesResponseType(typeof(GetKycStatusResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetStatus(Guid entityId, string entityType)
