@@ -70,20 +70,26 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
-// CORS: allow the frontend origin(s) from appsettings.json to call the API.
-// The Authorization header is covered by AllowAnyHeader; AllowCredentials is
-// included for cookie based auth (if we ever add session cookies).
+// CORS: allow all origins for now so local dev (e.g. localhost:3000) can test
+// against the API.
+// Later: swap the two blocks below.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
-        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-            ?? [];
-
-        policy.WithOrigins(origins)
+        // ACTIVE: allow all origins (testing from local development).
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowAnyHeader();
+
+        // LATER: restrict to the configured origins (https://yamicredit.com,
+        // https://dev.yamicredit.com). Uncomment this block, comment out the
+        // AllowAnyOrigin() block above.
+        // var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+        //     ?? [];
+        // policy.WithOrigins(origins)
+        //       .AllowAnyMethod()
+        //       .AllowAnyHeader();
     });
 });
 
