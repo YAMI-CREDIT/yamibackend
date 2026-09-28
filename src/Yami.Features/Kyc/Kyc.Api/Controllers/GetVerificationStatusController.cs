@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Http;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/kyc")]
-public class GetKycStatusController : ControllerBase
+public class GetVerificationStatusController : ControllerBase
 {
     private readonly IKycService _kycService;
     private readonly IUserService _userService;
     private readonly IBusinessService _businessService;
 
-    public GetKycStatusController(
+    public GetVerificationStatusController(
         IKycService kycService, IUserService userService, IBusinessService businessService)
     {
         _kycService = kycService;
@@ -22,7 +22,7 @@ public class GetKycStatusController : ControllerBase
 
     [HttpGet("{entityType}/{entityId}")]
     [Authorize]
-    [ProducesResponseType(typeof(GetKycStatusResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GetVerificationStatusResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetStatus(Guid entityId, string entityType)
     {
         // These come from the verified ID token's claims, not from the request.
@@ -76,7 +76,7 @@ public class GetKycStatusController : ControllerBase
 
         var verification = await _kycService.GetStatus(entityId, entityType);
 
-        var response = new GetKycStatusResponse();
+        var response = new GetVerificationStatusResponse();
 
         if (verification is null)
         {

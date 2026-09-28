@@ -1,5 +1,5 @@
 // Shape of the JSON body returned when polling a KYC verification status.
-public class GetKycStatusResponse
+public class GetVerificationStatusResponse
 {
     public string verificationStatus { get; set; }  // "NotStarted" | "InProgress" | "Verified" | "Failed" | "Error"
     public string? message { get; set; }
