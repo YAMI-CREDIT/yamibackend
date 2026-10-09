@@ -21,6 +21,7 @@ var authority = $"https://cognito-idp.{awsRegion}.amazonaws.com/{userPoolId}";
 builder.Services.AddUsers(builder.Configuration);
 builder.Services.AddBusinesses(builder.Configuration);
 builder.Services.AddAgreements(builder.Configuration);
+builder.Services.AddKyc(builder.Configuration);
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -69,6 +70,29 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+// CORS: allow all origins for now so local dev (e.g. localhost:3000) can test
+// against the API.
+// Later: swap the two blocks below.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        // ACTIVE: allow all origins (testing from local development).
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+
+        // LATER: restrict to the configured origins (https://yamicredit.com,
+        // https://dev.yamicredit.com). Uncomment this block, comment out the
+        // AllowAnyOrigin() block above.
+        // var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+        //     ?? [];
+        // policy.WithOrigins(origins)
+        //       .AllowAnyMethod()
+        //       .AllowAnyHeader();
+    });
+});
+
 // configure swagger
 builder.Services.AddSwaggerGen(options =>
 {
@@ -112,6 +136,11 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Yami API v1");
     });
 }
+
+// CORS must run BEFORE authentication: the browser's preflight (OPTIONS)
+// request carries no Authorization header, so if auth ran first the
+// preflight would be rejected with 401 and the real request would never fire.
+app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

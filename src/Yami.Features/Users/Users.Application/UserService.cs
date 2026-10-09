@@ -53,4 +53,19 @@ public class UserService : IUserService
         Console.WriteLine($"Getting user by ID: {id}");
         return await _db.Users.FindAsync(id);
     }
+
+    // Flips the user's final verification outcome. Returns false if the user
+    // doesn't exist. The Kyc module calls this with the provider's result.
+    public async Task<bool> SetVerified(Guid id, bool verified)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user is null)
+        {
+            return false;
+        }
+
+        user.verified = verified;
+        await _db.SaveChangesAsync();
+        return true;
+    }
 }

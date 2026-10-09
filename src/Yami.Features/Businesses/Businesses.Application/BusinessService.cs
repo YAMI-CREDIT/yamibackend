@@ -42,4 +42,19 @@ public class BusinessService : IBusinessService
         Console.WriteLine($"Getting business by ID: {id}");
         return await _db.Businesses.FindAsync(id);
     }
+
+    // Flips the business's final verification outcome. Returns false if the
+    // business doesn't exist. The Kyc module calls this with the provider's result.
+    public async Task<bool> SetVerified(Guid id, bool verified)
+    {
+        var business = await _db.Businesses.FindAsync(id);
+        if (business is null)
+        {
+            return false;
+        }
+
+        business.verified = verified;
+        await _db.SaveChangesAsync();
+        return true;
+    }
 }
