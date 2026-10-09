@@ -148,7 +148,7 @@ public class KycService : IKycService
         catch (Exception ex)
         {
             // A technical failure (provider down, timeout, DI, our own bug) is
-            // NOT a verdict — the entity's verified flag must not change.
+            // NOT a verdict. The entity's verified flag must not change.
             // Mark the attempt Error so the client can simply retry.
             Console.WriteLine($"KYC verification for entity {entityId} errored: {ex}");
 

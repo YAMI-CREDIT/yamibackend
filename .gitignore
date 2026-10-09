@@ -65,3 +65,5 @@ publish
 .DS_Store
 tokens.json
 GetUserRequest.cs
+nin.json
+photo.jpg
