@@ -13,7 +13,10 @@ public class AgreementService : IAgreementService
     // The controller will be implemented later
     public async Task<Agreement?> CreateAgreement(
         Guid creditorId, string creditorName, Guid debtorId,
-        string debtorName, string title, decimal amountTotal, DateTime dueDate)
+        string debtorName, bool creditorConsent, bool debtorConsent,
+        string title, decimal amountTotal, decimal? amountPaid, string currency,
+        DateOnly dueDate, Guid createdBy, AgreementStatus status,
+        DateTime? acceptedAt, DateTime? settledAt)
     {
         var newAgreement = new Agreement
         {
@@ -21,10 +24,18 @@ public class AgreementService : IAgreementService
             creditorName = creditorName,
             debtorId = debtorId,
             debtorName = debtorName,
+            creditorConsent = creditorConsent,
+            debtorConsent = debtorConsent,
             title = title,
             amountTotal = amountTotal,
+            amountPaid = amountPaid,
+            currency = currency,
             dueDate = dueDate,
-            createdAt = DateTime.UtcNow
+            createdAt = DateTime.UtcNow,
+            createdBy = createdBy,
+            status = status,
+            acceptedAt = acceptedAt,
+            settledAt = settledAt
         };
 
         _db.Agreements.Add(newAgreement);
@@ -37,7 +48,7 @@ public class AgreementService : IAgreementService
     {
         if (id == null && creditorId == null && debtorId == null)
         {
-            return null;
+            return [];
         }
 
         var query = _db.Agreements.AsQueryable();

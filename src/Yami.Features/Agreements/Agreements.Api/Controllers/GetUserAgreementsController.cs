@@ -19,10 +19,10 @@ public class GetUserAgreementsController : ControllerBase
 
     // Returns the user's debts (as debtor) and assets (as creditor).
     // The user must be the authenticated user, verified via the Cognito sub.
-    [HttpGet("user/{id}")]
+    [HttpGet()]
     [Authorize]
     [ProducesResponseType(typeof(GetUserAgreementsResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetUserAgreements(Guid id)
+    public async Task<IActionResult> GetUserAgreements()
     {
         var sub = User.FindFirst("sub")?.Value;
 
@@ -31,17 +31,19 @@ public class GetUserAgreementsController : ControllerBase
             return Unauthorized(new { error = "sub cannot be empty. Cannot verify the auth claim." });
         }
 
-        var user = await _userService.GetUser(id);
+        var user = await _userService.GetUserBySub(sub);
 
         if (user is null)
         {
-            return NotFound(new { error = "User not found." });
+            return NotFound(new { error = "No user record found for the authenticated claim." });
         }
 
         if (user.userSubId != sub)
         {
-            return Unauthorized(new { error = "unauthorized" });
+            return Unauthorized(new { error = "The authenticated user does not match the record." });
         }
+
+        var id = user.id;
 
         var assets = await _agreementService.GetAgreements(creditorId: id);
         var debts = await _agreementService.GetAgreements(debtorId: id);

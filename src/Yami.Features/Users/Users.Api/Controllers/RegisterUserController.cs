@@ -78,7 +78,7 @@ public class RegisterUserController : ControllerBase
         if (!string.IsNullOrWhiteSpace(businessName))
         {
             // string name = businessName;
-            string userId = newUser.id.ToString();
+            Guid userId = newUser.id;
             string? registrationNo = cacNo;
             newBusiness = await _businessService.RegisterBusiness(
                 businessName, userId, registrationNo, area

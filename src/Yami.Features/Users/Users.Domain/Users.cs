@@ -2,9 +2,9 @@
 public class User
 {
     public Guid id { get; set; }
-    public string phone { get; set; }
-    public string name { get; set; }
-    public string userSubId { get; set; } // This is the Cognito user sub, which is a unique identifier for the user in Cognito
+    required public string phone { get; set; }
+    required public string name { get; set; }
+    required public string userSubId { get; set; } // This is the Cognito user sub, which is a unique identifier for the user in Cognito
     public string? email { get; set; }
     public bool termsAccepted { get; set; }
     public string? area { get; set; }

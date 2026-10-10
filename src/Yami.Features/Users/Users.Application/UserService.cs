@@ -46,12 +46,23 @@ public class UserService : IUserService
         return newUser;
     }
 
-    // This logic is an example to get user details from dB.
-    // I'll leave the full implementation till later
+    // Get user by database ID.
     public async Task<User?> GetUser(Guid id)
     {
-        Console.WriteLine($"Getting user by ID: {id}");
+        Console.WriteLine($"INFO: Getting user by ID: {id}");
         return await _db.Users.FindAsync(id);
+    }
+
+    // Get user by the Cognito auth claim "sub".
+    public async Task<User?> GetUserBySub(string sub)
+    {
+        if (string.IsNullOrWhiteSpace(sub))
+        {
+            return null;
+        }
+
+        Console.WriteLine($"INFO: Getting user by Cognito sub: {sub}");
+        return await _db.Users.FirstOrDefaultAsync(u => u.userSubId == sub);
     }
 
     // Flips the user's final verification outcome. Returns false if the user

@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Http;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/users")]
-public class GetUserController : ControllerBase
+public class GetUserIdController : ControllerBase
 {
     private readonly IUserService _userService;
 
-    public GetUserController(IUserService userService)
+    public GetUserIdController(IUserService userService)
     {
         _userService = userService;
     }
@@ -18,11 +18,17 @@ public class GetUserController : ControllerBase
     [HttpGet()]
     [Authorize]
     [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetUser()
+    public async Task<IActionResult> GetUserId()
     {
         // get the sub from the authenticated user's claims
         var sub = User.FindFirst("sub")?.Value;
-        var user = await _userService.GetUser(sub);
+
+        if (string.IsNullOrWhiteSpace(sub))
+        {
+            return Unauthorized(new { error = "sub cannot be empty. Unable to verify the auth claim." });
+        }
+
+        var user = await _userService.GetUserBySub(sub);
 
         if (user is null)
         {
@@ -36,7 +42,7 @@ public class GetUserController : ControllerBase
 
         var response = new GetUserResponse
         {
-           message = "User retrieved successfully.",
+            message = "User retrieved successfully.",
             id = user.id
         };
 

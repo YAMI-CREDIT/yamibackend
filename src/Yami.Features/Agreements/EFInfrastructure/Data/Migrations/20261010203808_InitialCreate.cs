@@ -20,11 +20,18 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                     creditorName = table.Column<string>(type: "text", nullable: false),
                     debtorId = table.Column<Guid>(type: "uuid", nullable: false),
                     debtorName = table.Column<string>(type: "text", nullable: false),
+                    creditorConsent = table.Column<bool>(type: "boolean", nullable: false),
+                    debtorConsent = table.Column<bool>(type: "boolean", nullable: false),
                     title = table.Column<string>(type: "text", nullable: false),
                     amountTotal = table.Column<decimal>(type: "numeric", nullable: false),
                     amountPaid = table.Column<decimal>(type: "numeric", nullable: true),
-                    dueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    createdAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    currency = table.Column<string>(type: "text", nullable: false),
+                    dueDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    createdBy = table.Column<Guid>(type: "uuid", nullable: false),
+                    status = table.Column<int>(type: "integer", nullable: false),
+                    acceptedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    settledAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {

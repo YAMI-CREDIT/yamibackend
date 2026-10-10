@@ -12,9 +12,9 @@ public class KycVerification
 {
     public Guid id { get; set; }
     public Guid entityId { get; set; }        // the user or business being verified
-    public string entityType { get; set; }    // "user" | "business"
-    public string identityType { get; set; }  // "nin" | "bvn" | "cac"
-    public string identityNumber { get; set; }
+    required public string entityType { get; set; }    // "user" | "business"
+    required public string identityType { get; set; }  // "nin" | "bvn" | "cac"
+    required public string identityNumber { get; set; }
     public VerificationStatus status { get; set; } = VerificationStatus.InProgress;  // default to in progress for new verification records
     public string? failureReason { get; set; }    // set when status is Failed or Error
     public DateTime createdAt { get; set; }
