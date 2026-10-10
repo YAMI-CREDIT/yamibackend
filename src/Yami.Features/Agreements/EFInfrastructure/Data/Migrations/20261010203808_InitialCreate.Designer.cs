@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Agreements.EFInfrastructure.Data.Migrations
 {
     [DbContext(typeof(AgreementsDbContext))]
-    [Migration("20260918224909_InitialCreate")]
+    [Migration("20261010203808_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -30,6 +30,9 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("acceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<decimal?>("amountPaid")
                         .HasColumnType("numeric");
 
@@ -39,12 +42,25 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                     b.Property<DateTime>("createdAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("createdBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("creditorConsent")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid>("creditorId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("creditorName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("debtorConsent")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("debtorId")
                         .HasColumnType("uuid");
@@ -53,8 +69,14 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("dueDate")
+                    b.Property<DateOnly>("dueDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("settledAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("title")
                         .IsRequired()

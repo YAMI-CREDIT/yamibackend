@@ -2,8 +2,8 @@
 // Each user gets a GUID on insertion into the database
 public class RegisterUserRequest
 {   
-    public string phone { get; set; }
-    public string name { get; set; }
+    required public string phone { get; set; }
+    required public string name { get; set; }
     public string? email { get; set; }
     public string? dateOfBirth { get; set; }
 }

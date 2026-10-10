@@ -5,7 +5,7 @@ public class CreateAgreementRequest
 {
     public Guid creditorId { get; set; }
     public Guid debtorId { get; set; }
-    public string title { get; set; }
+    required public string title { get; set; }
     public decimal amountTotal { get; set; }
-    public DateTime dueDate { get; set; }
+    public DateOnly dueDate { get; set; }
 }
