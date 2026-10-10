@@ -9,52 +9,35 @@ using Microsoft.AspNetCore.Http;
 public class GetUserController : ControllerBase
 {
     private readonly IUserService _userService;
-    private readonly IAgreementService _agreementService;
 
-    public GetUserController(IUserService userService, IAgreementService agreementService)
+    public GetUserController(IUserService userService)
     {
         _userService = userService;
-        _agreementService = agreementService;
     }
 
-    [HttpGet("{id}")]
+    [HttpGet()]
     [Authorize]
     [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetUserInfo(Guid id)
+    public async Task<IActionResult> GetUser()
     {
         // get the sub from the authenticated user's claims
         var sub = User.FindFirst("sub")?.Value;
-        var user = await _userService.GetUser(id);
+        var user = await _userService.GetUser(sub);
 
         if (user is null)
         {
             return NotFound(new { error = "User not found." });
         }
 
-        if (user.userSubId != sub)
-        {
-            return Unauthorized(new { error = "unauthorized" });
-        }
-
-        var userAssets = await _agreementService.GetAgreements(creditorId: id);
-
-        if (userAssets is null)
-        {
-            return BadRequest(new { error = "agreement id, creditor id or debtor id is required." });
-        }
-
-        var userDebts = await _agreementService.GetAgreements(debtorId: id);
-
-        if (userDebts is null)
-        {
-            return BadRequest(new { error = "agreement id, creditor id or debtor id is required." });
-        }
+        // if (user.userSubId != sub)
+        // {
+        //     return Unauthorized(new { error = "unauthorized" });
+        // }
 
         var response = new GetUserResponse
         {
-            name = user.name,
-            debts = userDebts,
-            assets = userAssets
+           message = "User retrieved successfully.",
+            id = user.id
         };
 
         return Ok(response);
