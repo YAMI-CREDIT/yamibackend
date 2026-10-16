@@ -15,7 +15,7 @@ public class GetUserIdController : ControllerBase
         _userService = userService;
     }
 
-    [HttpGet()]
+    [HttpGet("me")]
     [Authorize]
     [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUserId()
@@ -39,6 +39,33 @@ public class GetUserIdController : ControllerBase
         // {
         //     return Unauthorized(new { error = "unauthorized" });
         // }
+
+        var response = new GetUserResponse
+        {
+            message = "User retrieved successfully.",
+            id = user.id
+        };
+
+        return Ok(response);
+    }
+
+    [HttpGet("by-phone")]
+    [Authorize]
+    [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetUserByPhone([FromQuery] GetUserByPhoneRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.phone))
+        {
+            return BadRequest(new { error = "phone is required." });
+        }
+
+        var user = await _userService.GetUserByPhone(request.phone);
+
+        if (user is null)
+        {
+            return NotFound(new { error = "User not found." });
+        }
 
         var response = new GetUserResponse
         {

@@ -65,6 +65,18 @@ public class UserService : IUserService
         return await _db.Users.FirstOrDefaultAsync(u => u.userSubId == sub);
     }
 
+    // Get user by phone number.
+    public async Task<User?> GetUserByPhone(string phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            return null;
+        }
+
+        Console.WriteLine($"INFO: Getting user by phone: {phone}");
+        return await _db.Users.FirstOrDefaultAsync(u => u.phone == phone);
+    }
+
     // Flips the user's final verification outcome. Returns false if the user
     // doesn't exist. The Kyc module calls this with the provider's result.
     public async Task<bool> SetVerified(Guid id, bool verified)
