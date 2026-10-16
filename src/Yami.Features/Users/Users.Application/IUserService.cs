@@ -12,5 +12,6 @@ public interface IUserService
         string? userType=null);
     Task<User?> GetUser(Guid id);
     Task<User?> GetUserBySub(string sub);
+    Task<User?> GetUserByPhone(string phone);
     Task<bool> SetVerified(Guid id, bool verified);
 }
