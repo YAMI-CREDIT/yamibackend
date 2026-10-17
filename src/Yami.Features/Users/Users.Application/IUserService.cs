@@ -14,4 +14,8 @@ public interface IUserService
     Task<User?> GetUserBySub(string sub);
     Task<User?> GetUserByPhone(string phone);
     Task<bool> SetVerified(Guid id, bool verified);
+    Task<Invitation?> CreateInvitation(string phone, Guid agreementId, Guid invitedBy);
+    Task<Invitation?> InviteByPhone(string phone, Guid agreementId, Guid invitedBy);
+    Task<bool> InviteByPhone(string phone, Guid invitedBy);
+    Task<bool> InviteByEmail(string email, Guid invitedBy);
 }

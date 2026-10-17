@@ -46,14 +46,8 @@ public class RegisterUserController : ControllerBase
         string phone = request.phone;
         string name = request.name;
         string? email = request.email;
-        bool termsAccepted = true;
-        string? businessName = null;
-        string? cacNo = null;
-        string? area = null;
-        string? identityType = null;
-        string? identityNumber = null;
-        string? userType = null;
         string? dateOfBirth = request.dateOfBirth;
+        bool termsAccepted = true;
 
         if (string.IsNullOrWhiteSpace(phone) || string.IsNullOrWhiteSpace(name))
         {
@@ -62,9 +56,7 @@ public class RegisterUserController : ControllerBase
 
 
         var newUser = await _userService.RegisterUser(
-            phone, name, sub, dateOfBirth, email,
-            termsAccepted, area, identityType,
-            identityNumber, userType);
+            phone, name, sub, dateOfBirth, email, termsAccepted);
 
         // I would not expect us to fufil this condition as cognito should not allow
         // the registration in the first place.
@@ -74,6 +66,12 @@ public class RegisterUserController : ControllerBase
         }
 
         Business? newBusiness = null;
+
+        // Business registration fields. Kept together so this block can be
+        // extracted into its own endpoint later.
+        string? businessName = null;
+        string? cacNo = null;
+        string? area = null;
 
         if (!string.IsNullOrWhiteSpace(businessName))
         {

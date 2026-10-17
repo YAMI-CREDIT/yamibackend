@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
+using System.Text.RegularExpressions;
 
 [ApiController]
 [ApiVersion("1.0")]
@@ -9,6 +10,9 @@ using Microsoft.AspNetCore.Http;
 public class GetUserIdController : ControllerBase
 {
     private readonly IUserService _userService;
+
+    // Nigerian numbers in international format: +234 followed by 10 digits (e.g. +2348012345678).
+    private static readonly Regex PhoneRegex = new(@"^\+234\d{10}$", RegexOptions.Compiled);
 
     public GetUserIdController(IUserService userService)
     {
@@ -52,12 +56,16 @@ public class GetUserIdController : ControllerBase
     [HttpGet("by-phone")]
     [Authorize]
     [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserByPhone([FromQuery] GetUserByPhoneRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.phone))
         {
             return BadRequest(new { error = "phone is required." });
+        }
+
+        if (!PhoneRegex.IsMatch(request.phone))
+        {
+            return BadRequest(new { error = "phone must follow the format +234XXXXXXXXXX (e.g. +2348012345678)." });
         }
 
         var user = await _userService.GetUserByPhone(request.phone);
