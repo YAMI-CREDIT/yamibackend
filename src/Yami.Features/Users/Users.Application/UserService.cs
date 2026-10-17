@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore;
 public class UserService : IUserService
 {
     private readonly UsersDbContext _db;
+    private readonly IInvitationService _invitationService;
 
-    public UserService(UsersDbContext db)
+    public UserService(UsersDbContext db, IInvitationService invitationService)
     {
         _db = db;
+        _invitationService = invitationService;
     }
 
     // This is the actual Registration logic
@@ -24,8 +26,17 @@ public class UserService : IUserService
             return null;   
         }
 
+        // If this phone has a pending, unexpired invitation, reuse its pre-allocated
+        // id so any agreement already referencing it stays valid. Otherwise the
+        // user gets a fresh id.
+        var pendingInvitation = await _db.Invitations
+            .FirstOrDefaultAsync(i => i.phone == phone
+                && i.status == InvitationStatus.Pending
+                && i.expiresAt > DateTime.UtcNow);
+
         var newUser = new User
         {
+            id = pendingInvitation?.id ?? Guid.NewGuid(),
             phone = phone,
             name = name,
             userSubId = userSubId,
@@ -41,6 +52,13 @@ public class UserService : IUserService
         };
 
         _db.Users.Add(newUser);
+
+        // Consume the invitation in the same transaction as the user insert.
+        if (pendingInvitation is not null)
+        {
+            pendingInvitation.status = InvitationStatus.Accepted;
+        }
+
         await _db.SaveChangesAsync();
 
         return newUser;
@@ -89,6 +107,110 @@ public class UserService : IUserService
 
         user.verified = verified;
         await _db.SaveChangesAsync();
+        return true;
+    }
+
+    // Creates an invitation for a counterparty who is not yet registered.
+    // The invitation's id is pre-allocated as the future user's id, so the agreement
+    // can reference it immediately. Returns the existing invitation if one is already
+    // pending for this phone (idempotent), or null if the phone is invalid.
+    public async Task<Invitation?> CreateInvitation(
+        string phone, Guid agreementId, Guid invitedBy)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            return null;
+        }
+
+        Console.WriteLine($"INFO: Creating invitation for phone: {phone}");
+
+        // Idempotency: reuse an existing invitation for this phone.
+        var existing = await _db.Invitations
+            .FirstOrDefaultAsync(i => i.phone == phone
+                && i.status == InvitationStatus.Pending
+                && i.expiresAt > DateTime.UtcNow);
+
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        var invitation = new Invitation
+        {
+            id = Guid.NewGuid(),
+            phone = phone,
+            agreementId = agreementId,
+            invitedBy = invitedBy,
+            createdAt = DateTime.UtcNow,
+            expiresAt = DateTime.UtcNow.AddHours(72),
+            status = InvitationStatus.Pending
+        };
+
+        _db.Invitations.Add(invitation);
+        await _db.SaveChangesAsync();
+
+        return invitation;
+    }
+
+    // Creates an invitation and sends the counterparty an SMS with a link to the
+    // generic registration page. No token in the link: the counterparty authenticates
+    // via Cognito (phone OTP) and the normal registration flow matches them to this
+    // invitation by phone. Returns null if the phone is invalid.
+    public async Task<Invitation?> InviteByPhone(
+        string phone, Guid agreementId, Guid invitedBy)
+    {
+        var invitation = await CreateInvitation(phone, agreementId, invitedBy);
+
+        if (invitation is null)
+        {
+            return null;
+        }
+
+        // Look up the inviter's name for the SMS message.
+        var inviter = await _db.Users.FindAsync(invitedBy);
+        var inviterName = inviter?.name ?? "a Yami user";
+
+        await _invitationService.SendInvitationSms(phone, inviterName);
+
+        return invitation;
+    }
+
+    // Invites a user by phone. No invitation row is
+    // created: this is a pure notification. The invitee registers normally and
+    // is matched to any pending agreement invitation by phone if one exists.
+    public async Task<bool> InviteByPhone(string phone, Guid invitedBy)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            return false;
+        }
+
+        Console.WriteLine($"INFO: Inviting user by phone: {phone}");
+
+        var inviter = await _db.Users.FindAsync(invitedBy);
+        var inviterName = inviter?.name ?? "a Yami user";
+
+        await _invitationService.SendInvitationSms(phone, inviterName);
+
+        return true;
+    }
+
+    // Invites a user by email. No invitation row is
+    // created: this is a pure notification.
+    public async Task<bool> InviteByEmail(string email, Guid invitedBy)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return false;
+        }
+
+        Console.WriteLine($"INFO: Inviting user by email: {email}");
+
+        var inviter = await _db.Users.FindAsync(invitedBy);
+        var inviterName = inviter?.name ?? "a Yami user";
+
+        await _invitationService.SendInvitationEmail(email, inviterName);
+
         return true;
     }
 }
