@@ -12,11 +12,11 @@ public class AgreementService : IAgreementService
     // this function is a placeholder to create a new agreement.
     // The controller will be implemented later
     public async Task<Agreement?> CreateAgreement(
-        Guid creditorId, string creditorName, Guid debtorId,
-        string debtorName, bool creditorConsent, bool debtorConsent,
+        Guid creditorId, string? creditorName, Guid debtorId,
+        string? debtorName, bool creditorConsent, bool debtorConsent,
         string title, decimal amountTotal, decimal? amountPaid, string currency,
         DateOnly dueDate, Guid createdBy, AgreementStatus status,
-        DateTime? acceptedAt, DateTime? settledAt)
+        DateTime? acceptedAt, DateTime? settledAt, RepaymentPlan repaymentPlan)
     {
         var newAgreement = new Agreement
         {
@@ -35,7 +35,8 @@ public class AgreementService : IAgreementService
             createdBy = createdBy,
             status = status,
             acceptedAt = acceptedAt,
-            settledAt = settledAt
+            settledAt = settledAt,
+            repaymentPlan = repaymentPlan
         };
 
         _db.Agreements.Add(newAgreement);

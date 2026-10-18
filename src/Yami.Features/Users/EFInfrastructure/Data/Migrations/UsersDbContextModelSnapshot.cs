@@ -21,6 +21,36 @@ namespace Users.EFInfrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Invitation", b =>
+                {
+                    b.Property<Guid>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("agreementId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("expiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("invitedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("phone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("id");
+
+                    b.ToTable("Invitations");
+                });
+
             modelBuilder.Entity("User", b =>
                 {
                     b.Property<Guid>("id")

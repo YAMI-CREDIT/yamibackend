@@ -7,13 +7,22 @@ public enum AgreementStatus
     Settled,  // fully paid by debtor
 }
 
+public enum RepaymentPlan
+{
+    daily,    // debtor will pay daily,
+    weekly,   // debtor will pay weekly,
+    monthly,  // debtor will pay monthly,
+    lumpSum, // debtor will pay one lump sum by the agreed date,
+    custom,  // debtor will pay as per the agreed custom terms
+}
+
 public class Agreement
 {
     public Guid id { get; set; }
     public Guid creditorId { get; set; }
-    required public string creditorName { get; set; }
+    public string? creditorName { get; set; }
     public Guid debtorId { get; set; }
-    required public string debtorName { get; set; }
+    public string? debtorName { get; set; }
     public bool creditorConsent { get; set; }
     public bool debtorConsent { get; set; }
     required public string title { get; set; }
@@ -26,6 +35,6 @@ public class Agreement
     public AgreementStatus  status { get; set; } = AgreementStatus.Pending;
     public DateTime? acceptedAt { get; set; }
     public DateTime? settledAt { get; set; }
-    // public string paymentTerms { get; set; }
+    public RepaymentPlan repaymentPlan { get; set; } = RepaymentPlan.lumpSum;
     // public DateTime[] paymentdates { get; set; }
 }

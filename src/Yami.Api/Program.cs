@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Asp.Versioning;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,7 +69,11 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // CORS: allow all origins for now so local dev (e.g. localhost:3000) can test
 // against the API.
@@ -112,7 +117,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 
     options.SupportNonNullableReferenceTypes();
-    options.UseAllOfToExtendReferenceSchemas(); 
+    // options.UseAllOfToExtendReferenceSchemas(); 
 });
 
 var app = builder.Build();

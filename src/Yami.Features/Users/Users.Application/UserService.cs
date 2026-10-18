@@ -95,6 +95,20 @@ public class UserService : IUserService
         return await _db.Users.FirstOrDefaultAsync(u => u.phone == phone);
     }
 
+    // Returns the pending, unexpired invitation for this phone, if one exists.
+    public async Task<Invitation?> GetPendingInvitationByPhone(string phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            return null;
+        }
+
+        return await _db.Invitations
+            .FirstOrDefaultAsync(i => i.phone == phone
+                && i.status == InvitationStatus.Pending
+                && i.expiresAt > DateTime.UtcNow);
+    }
+
     // Flips the user's final verification outcome. Returns false if the user
     // doesn't exist. The Kyc module calls this with the provider's result.
     public async Task<bool> SetVerified(Guid id, bool verified)
@@ -114,8 +128,8 @@ public class UserService : IUserService
     // The invitation's id is pre-allocated as the future user's id, so the agreement
     // can reference it immediately. Returns the existing invitation if one is already
     // pending for this phone (idempotent), or null if the phone is invalid.
-    public async Task<Invitation?> CreateInvitation(
-        string phone, Guid agreementId, Guid invitedBy)
+    private async Task<Invitation?> CreateInvitation(
+        string phone, Guid agreementId, Guid invitedBy, Guid preAllocatedId)
     {
         if (string.IsNullOrWhiteSpace(phone))
         {
@@ -137,7 +151,7 @@ public class UserService : IUserService
 
         var invitation = new Invitation
         {
-            id = Guid.NewGuid(),
+            id = preAllocatedId,
             phone = phone,
             agreementId = agreementId,
             invitedBy = invitedBy,
@@ -152,14 +166,19 @@ public class UserService : IUserService
         return invitation;
     }
 
-    // Creates an invitation and sends the counterparty an SMS with a link to the
-    // generic registration page. No token in the link: the counterparty authenticates
-    // via Cognito (phone OTP) and the normal registration flow matches them to this
-    // invitation by phone. Returns null if the phone is invalid.
-    public async Task<Invitation?> InviteByPhone(
-        string phone, Guid agreementId, Guid invitedBy)
+    // Creates an agreement invitation and sends the counterparty an SMS with a link
+    // to the generic registration page. No token in the link: the counterparty
+    // authenticates via Cognito (phone OTP) and the normal registration flow matches
+    // them to this invitation by phone. Returns null if the phone is invalid.
+    public async Task<Invitation?> InviteToAgreement(
+        string phone, Guid agreementId, Guid invitedBy, Guid preAllocatedId)
     {
-        var invitation = await CreateInvitation(phone, agreementId, invitedBy);
+        if (preAllocatedId == Guid.Empty)
+        {
+            return null;
+        }
+
+        var invitation = await CreateInvitation(phone, agreementId, invitedBy, preAllocatedId);
 
         if (invitation is null)
         {
