@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Agreements.EFInfrastructure.Data.Migrations
 {
     [DbContext(typeof(AgreementsDbContext))]
-    [Migration("20261018115758_InitialCreate")]
+    [Migration("20261018195311_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -69,6 +69,9 @@ namespace Agreements.EFInfrastructure.Data.Migrations
 
                     b.Property<DateOnly>("dueDate")
                         .HasColumnType("date");
+
+                    b.Property<string>("purpose")
+                        .HasColumnType("text");
 
                     b.Property<int>("repaymentPlan")
                         .HasColumnType("integer");

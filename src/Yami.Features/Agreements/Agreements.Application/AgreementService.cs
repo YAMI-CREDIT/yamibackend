@@ -13,7 +13,7 @@ public class AgreementService : IAgreementService
     // The controller will be implemented later
     public async Task<Agreement?> CreateAgreement(
         Guid creditorId, string? creditorName, Guid debtorId,
-        string? debtorName, bool creditorConsent, bool debtorConsent,
+        string? debtorName, bool creditorConsent, bool debtorConsent, string? purpose,
         string title, decimal amountTotal, decimal? amountPaid, string currency,
         DateOnly dueDate, Guid createdBy, AgreementStatus status,
         DateTime? acceptedAt, DateTime? settledAt, RepaymentPlan repaymentPlan)
@@ -26,6 +26,7 @@ public class AgreementService : IAgreementService
             debtorName = debtorName,
             creditorConsent = creditorConsent,
             debtorConsent = debtorConsent,
+            purpose = purpose,
             title = title,
             amountTotal = amountTotal,
             amountPaid = amountPaid,

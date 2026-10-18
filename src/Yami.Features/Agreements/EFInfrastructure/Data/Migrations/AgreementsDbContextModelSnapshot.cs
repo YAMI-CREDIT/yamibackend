@@ -67,6 +67,9 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                     b.Property<DateOnly>("dueDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("purpose")
+                        .HasColumnType("text");
+
                     b.Property<int>("repaymentPlan")
                         .HasColumnType("integer");
 
