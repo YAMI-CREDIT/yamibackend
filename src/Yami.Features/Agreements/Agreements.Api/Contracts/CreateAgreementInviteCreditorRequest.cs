@@ -2,6 +2,7 @@
 public class CreateAgreementInviteCreditorRequest
 {
     public required string creditorPhone { get; set; }
+    public string? purpose { get; set; }
     required public string title { get; set; }
     public decimal amountTotal { get; set; }
     public DateOnly dueDate { get; set; }

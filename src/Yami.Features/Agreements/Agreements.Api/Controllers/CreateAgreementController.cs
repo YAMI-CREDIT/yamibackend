@@ -103,6 +103,7 @@ public class CreateAgreementController : ControllerBase
             debtor.id, debtor.name,
             creditorConsent: consentByCreditor,
             debtorConsent: consentByDebtor,
+            request.purpose,
             request.title,
             request.amountTotal,
             amountPaid: 0m,
@@ -137,6 +138,7 @@ public class CreateAgreementController : ControllerBase
     {
         return await CreateAgreementWithInvitation(
             request.debtorPhone,
+            request.purpose,
             request.title,
             request.amountTotal,
             request.dueDate,
@@ -151,6 +153,7 @@ public class CreateAgreementController : ControllerBase
     {
         return await CreateAgreementWithInvitation(
             request.creditorPhone,
+            request.purpose,
             request.title,
             request.amountTotal,
             request.dueDate,
@@ -159,7 +162,8 @@ public class CreateAgreementController : ControllerBase
     }
 
     private async Task<IActionResult> CreateAgreementWithInvitation(
-        string? counterpartyPhone,
+        string counterpartyPhone,
+        string? purpose,
         string title,
         decimal amountTotal,
         DateOnly dueDate,
@@ -230,6 +234,7 @@ public class CreateAgreementController : ControllerBase
             debtorId, debtorName,
             creditorConsent: isInvitingDebtor,
             debtorConsent: isInvitingCreditor,
+            purpose,
             title,
             amountTotal,
             amountPaid: 0m,

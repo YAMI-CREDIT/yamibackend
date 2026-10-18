@@ -22,6 +22,7 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                     debtorName = table.Column<string>(type: "text", nullable: true),
                     creditorConsent = table.Column<bool>(type: "boolean", nullable: false),
                     debtorConsent = table.Column<bool>(type: "boolean", nullable: false),
+                    purpose = table.Column<string>(type: "text", nullable: true),
                     title = table.Column<string>(type: "text", nullable: false),
                     amountTotal = table.Column<decimal>(type: "numeric", nullable: false),
                     amountPaid = table.Column<decimal>(type: "numeric", nullable: true),

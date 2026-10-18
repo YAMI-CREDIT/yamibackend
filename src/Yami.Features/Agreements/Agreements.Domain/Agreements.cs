@@ -25,6 +25,7 @@ public class Agreement
     public string? debtorName { get; set; }
     public bool creditorConsent { get; set; }
     public bool debtorConsent { get; set; }
+    public string? purpose { get; set; }
     required public string title { get; set; }
     public decimal amountTotal { get; set; }
     public decimal? amountPaid { get; set; }
