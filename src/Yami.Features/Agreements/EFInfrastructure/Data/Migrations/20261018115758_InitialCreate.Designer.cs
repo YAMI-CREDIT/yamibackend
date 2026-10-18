@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Agreements.EFInfrastructure.Data.Migrations
 {
     [DbContext(typeof(AgreementsDbContext))]
-    [Migration("20261010203808_InitialCreate")]
+    [Migration("20261018115758_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -52,7 +52,6 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("creditorName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("currency")
@@ -66,11 +65,13 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("debtorName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateOnly>("dueDate")
                         .HasColumnType("date");
+
+                    b.Property<int>("repaymentPlan")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("settledAt")
                         .HasColumnType("timestamp with time zone");

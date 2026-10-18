@@ -13,9 +13,9 @@ public interface IUserService
     Task<User?> GetUser(Guid id);
     Task<User?> GetUserBySub(string sub);
     Task<User?> GetUserByPhone(string phone);
+    Task<Invitation?> GetPendingInvitationByPhone(string phone);
     Task<bool> SetVerified(Guid id, bool verified);
-    Task<Invitation?> CreateInvitation(string phone, Guid agreementId, Guid invitedBy);
-    Task<Invitation?> InviteByPhone(string phone, Guid agreementId, Guid invitedBy);
+    Task<Invitation?> InviteToAgreement(string phone, Guid agreementId, Guid invitedBy, Guid preAllocatedId);
     Task<bool> InviteByPhone(string phone, Guid invitedBy);
     Task<bool> InviteByEmail(string email, Guid invitedBy);
 }
