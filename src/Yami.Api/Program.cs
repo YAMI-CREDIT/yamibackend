@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -18,6 +19,40 @@ var appClientId = builder.Configuration["Cognito:ClientId"]
     ?? throw new InvalidOperationException("Cognito ClientId is missing. Make sure it exists in appsettings.json");
 
 var authority = $"https://cognito-idp.{awsRegion}.amazonaws.com/{userPoolId}";
+const string CognitoAccessTokenScheme = "CognitoAccessToken";
+const string CognitoIdTokenScheme = "CognitoIdToken";
+const string RegistrationTokenPolicy = "RegistrationToken";
+
+void ConfigureCognitoBearer(JwtBearerOptions options, string expectedTokenUse)
+{
+    options.MapInboundClaims = false;
+    options.Authority = authority;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = authority,
+        ValidateIssuerSigningKey = true,
+        ValidateAudience = expectedTokenUse == "id",
+        ValidAudience = appClientId,
+        ValidateLifetime = true,
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            var principal = context.Principal;
+            var tokenUse = principal?.FindFirst("token_use")?.Value;
+            var clientId = principal?.FindFirst("client_id")?.Value;
+
+            if (tokenUse != expectedTokenUse || (expectedTokenUse == "access" && clientId != appClientId))
+            {
+                context.Fail("The Cognito token type or app client is invalid.");
+            }
+
+            return Task.CompletedTask;
+        }
+    };
+}
 
 builder.Services.AddUsers(builder.Configuration);
 builder.Services.AddBusinesses(builder.Configuration);
@@ -39,37 +74,27 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
-// These lines setup JWT verification
+// Registration uses ID tokens; other protected API routes use access tokens.
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = CognitoAccessTokenScheme;
+    options.DefaultChallengeScheme = CognitoAccessTokenScheme;
 })
-.AddJwtBearer(options =>
+.AddJwtBearer(CognitoAccessTokenScheme, options =>
+    ConfigureCognitoBearer(options, "access"))
+.AddJwtBearer(CognitoIdTokenScheme, options =>
+    ConfigureCognitoBearer(options, "id"));
+
+builder.Services.AddAuthorization(options =>
 {
-    options.MapInboundClaims = false;
-    options.Authority = authority; // ASP.NET Core auto-discovers JWKS from here
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidIssuer = authority,
-        ValidateAudience = true,
-        ValidAudience = appClientId,
-        ValidateLifetime = true,
-    };
+    options.DefaultPolicy = new AuthorizationPolicyBuilder(CognitoAccessTokenScheme)
+        .RequireAuthenticatedUser()
+        .Build();
 
-    // DEBUG: To troubleshoot jwt events
-    // options.Events = new JwtBearerEvents
-    // {
-    //     OnAuthenticationFailed = context =>
-    //     {
-    //         Console.WriteLine($"Token validation failed: {context.Exception.Message}");
-    //         return Task.CompletedTask;
-    //     }
-    // };
+    options.AddPolicy(RegistrationTokenPolicy, policy =>
+        policy.AddAuthenticationSchemes(CognitoIdTokenScheme)
+            .RequireAuthenticatedUser());
 });
-
-builder.Services.AddAuthorization();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
