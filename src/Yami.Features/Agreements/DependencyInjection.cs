@@ -22,6 +22,7 @@ public static class AgreementsModule
             options.UseNpgsql(connectionString));
 
         services.AddScoped<IAgreementService, AgreementService>();
+        services.AddScoped<IAgreementNotificationService, AgreementNotificationService>();
 
         return services;
     }

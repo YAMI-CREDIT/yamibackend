@@ -1,18 +1,22 @@
-// Placeholder invitation implementation. Logs the message for now; swap the body
-// for a real provider (e.g. Africa's Talking, Twilio) when one is chosen.
+// Invitation notifications. Builds the invitation wording and delegates the
+// actual delivery to the shared ISmsSender (see the Notifications feature),
+// so the SMS provider is configured and owned in one place.
 public class InvitationService : IInvitationService
 {
+    private readonly ISmsSender _smsSender;
+
+    public InvitationService(ISmsSender smsSender)
+    {
+        _smsSender = smsSender;
+    }
+
     public async Task SendInvitationSms(string phone, string inviterName)
     {
-        // TODO: Replace with a real SMS provider call.
         var message =
             $"Hi, {inviterName} has invited you to join Yami. " +
             "Click here to register: https://yami.app/register";
 
-        Console.WriteLine($"INFO: [SMS stub] To {phone}: {message}");
-
-        // Simulate the provider round-trip so the call site stays async.
-        await Task.CompletedTask;
+        await _smsSender.SendSms(phone, message);
     }
 
     public async Task SendInvitationEmail(string email, string inviterName)

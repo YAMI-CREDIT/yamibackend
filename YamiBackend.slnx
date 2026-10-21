@@ -5,5 +5,6 @@
   <Folder Name="/src/Yami.Features/">
     <Project Path="src/Yami.Features/Users/Users.csproj" />
     <Project Path="src/Yami.Features/Kyc/kyc.csproj" />
+    <Project Path="src/Yami.Features/Notifications/Notifications.csproj" />
   </Folder>
 </Solution>

@@ -23,6 +23,7 @@ builder.Services.AddUsers(builder.Configuration);
 builder.Services.AddBusinesses(builder.Configuration);
 builder.Services.AddAgreements(builder.Configuration);
 builder.Services.AddKyc(builder.Configuration);
+builder.Services.AddNotifications(builder.Configuration);
 
 builder.Services.AddApiVersioning(options =>
 {

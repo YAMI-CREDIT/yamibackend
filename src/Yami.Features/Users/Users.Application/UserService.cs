@@ -4,11 +4,16 @@ public class UserService : IUserService
 {
     private readonly UsersDbContext _db;
     private readonly IInvitationService _invitationService;
+    private readonly IRegistrationNotificationService _registrationNotificationService;
 
-    public UserService(UsersDbContext db, IInvitationService invitationService)
+    public UserService(
+        UsersDbContext db,
+        IInvitationService invitationService,
+        IRegistrationNotificationService registrationNotificationService)
     {
         _db = db;
         _invitationService = invitationService;
+        _registrationNotificationService = registrationNotificationService;
     }
 
     // This is the actual Registration logic
@@ -60,6 +65,7 @@ public class UserService : IUserService
         }
 
         await _db.SaveChangesAsync();
+        await _registrationNotificationService.SendRegistrationSuccessfulSms(phone);
 
         return newUser;
     }

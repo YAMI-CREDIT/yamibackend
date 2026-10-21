@@ -11,13 +11,18 @@ public class CreateAgreementController : ControllerBase
 {
     private readonly IAgreementService _agreementService;
     private readonly IUserService _userService;
+    private readonly IAgreementNotificationService _agreementNotificationService;
 
     private static readonly Regex PhoneRegex = new(@"^\+234\d{10}$", RegexOptions.Compiled);
 
-    public CreateAgreementController(IAgreementService agreementService, IUserService userService)
+    public CreateAgreementController(
+        IAgreementService agreementService,
+        IUserService userService,
+        IAgreementNotificationService agreementNotificationService)
     {
         _agreementService = agreementService;
         _userService = userService;
+        _agreementNotificationService = agreementNotificationService;
     }
 
     [HttpPost]
@@ -120,7 +125,13 @@ public class CreateAgreementController : ControllerBase
             return Conflict(new { error = "The agreement could not be created." });
         }
 
-        // To add notification plug-in to send sms and email to both parties
+        //Sms notification plugin to the agreement counter party
+        //Still to add: email notification to both parties
+        var recipient = creator.id == creditor.id ? debtor : creditor;
+        await _agreementNotificationService.SendAgreementCreatedSms(
+            recipient.phone,
+            newAgreement.title,
+            creator.name);
 
         var response = new CreateAgreementResponse
         {
