@@ -18,7 +18,7 @@ public class RegisterUserController : ControllerBase
     }
     
     [HttpPost]
-    [Authorize]         // This ensure ths authorization middleware has run before allowing the rest of the code to continue
+    [Authorize(Policy = "RegistrationToken")]
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
@@ -36,6 +36,12 @@ public class RegisterUserController : ControllerBase
         if (sub is null)
         {
             return Unauthorized(new { error = "sub cannot be empty" });
+        }
+
+        var phoneNumberVerified = User.FindFirst("phone_number_verified")?.Value;
+        if (!bool.TryParse(phoneNumberVerified, out var isPhoneNumberVerified) || !isPhoneNumberVerified)
+        {
+            return Unauthorized(new { error = "Phone number must be verified by the auth provider before registration." });
         }
 
         if (phoneNumber != request.phone)
