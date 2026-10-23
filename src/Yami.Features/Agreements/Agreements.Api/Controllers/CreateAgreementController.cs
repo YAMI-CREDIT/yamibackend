@@ -125,8 +125,6 @@ public class CreateAgreementController : ControllerBase
             return Conflict(new { error = "The agreement could not be created." });
         }
 
-        //Sms notification plugin to the agreement counter party
-        //Still to add: email notification to both parties
         var recipient = creator.id == creditor.id ? debtor : creditor;
         await _agreementNotificationService.SendAgreementCreatedSms(
             recipient.phone,
@@ -137,6 +135,7 @@ public class CreateAgreementController : ControllerBase
         {
             await _agreementNotificationService.SendAgreementCreatedEmail(
                 recipient.email,
+                recipient.name,
                 newAgreement.id,
                 newAgreement.title,
                 creator.name,
@@ -145,6 +144,20 @@ public class CreateAgreementController : ControllerBase
                 debtor.phone,
                 debtor.name);
         }
+
+        if (!string.IsNullOrWhiteSpace(creator.email))
+        {
+            await _agreementNotificationService.SendAgreementCreatedEmail(
+                creator.email,
+                creator.name,
+                newAgreement.id,
+                newAgreement.title,
+                creator.name,
+                creditor.phone,
+                creditor.name,
+                debtor.phone,
+                debtor.name);
+            }
 
         var response = new CreateAgreementResponse
         {
