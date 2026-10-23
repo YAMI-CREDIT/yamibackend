@@ -43,6 +43,7 @@ public class AgreementNotificationService : IAgreementNotificationService
 
     public async Task SendAgreementCreatedEmail(
         string email,
+        string recipientName,
         Guid agreementId,
         string agreementTitle,
         string creatorName,
@@ -51,12 +52,14 @@ public class AgreementNotificationService : IAgreementNotificationService
         string debtorPhone,
         string debtorName)
     {
+        var encodedRecipientName = System.Net.WebUtility.HtmlEncode(recipientName);
         var encodedTitle = System.Net.WebUtility.HtmlEncode(agreementTitle);
         var encodedCreatorName = System.Net.WebUtility.HtmlEncode(creatorName);
         var encodedCreditorName = System.Net.WebUtility.HtmlEncode(creditorName);
         var encodedDebtorName = System.Net.WebUtility.HtmlEncode(debtorName);
 
         var htmlContent =
+            $"Hi {encodedRecipientName},<br>" +
             "Your agreement has been created on YAMI.<br>" +
             $"Agreement ID: {agreementId}<br>" +
             $"Title: {encodedTitle}<br>" +

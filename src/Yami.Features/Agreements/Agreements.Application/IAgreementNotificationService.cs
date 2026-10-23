@@ -7,6 +7,7 @@ public interface IAgreementNotificationService
 
     Task SendAgreementCreatedEmail(
         string email,
+        string recipientName,
         Guid agreementId,
         string agreementTitle,
         string creatorName,
