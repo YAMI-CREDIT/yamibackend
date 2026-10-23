@@ -2,9 +2,9 @@ using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-public class BrevoEmailOptions
+public class EmailOptions
 {
-    public const string SectionName = "Brevo";
+    public const string SectionName = "Email";
 
     public string? ApiKey { get; set; }
     public string Endpoint { get; set; } = "https://api.brevo.com/v3/smtp/email";
@@ -15,12 +15,12 @@ public class BrevoEmailOptions
 public class BrevoEmailSender : IEmailSender
 {
     private readonly HttpClient _httpClient;
-    private readonly BrevoEmailOptions _options;
+    private readonly EmailOptions _options;
     private readonly ILogger<BrevoEmailSender> _logger;
 
     public BrevoEmailSender(
         HttpClient httpClient,
-        IOptions<BrevoEmailOptions> options,
+        IOptions<EmailOptions> options,
         ILogger<BrevoEmailSender> logger)
     {
         _httpClient = httpClient;
@@ -33,7 +33,7 @@ public class BrevoEmailSender : IEmailSender
         if (string.IsNullOrWhiteSpace(_options.ApiKey))
         {
             throw new InvalidOperationException(
-                "Brevo API key is missing. Set Brevo:ApiKey in configuration or Environment.");
+                "Email API key is missing. Set Email:ApiKey in configuration or Environment.");
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Post, _options.Endpoint);
