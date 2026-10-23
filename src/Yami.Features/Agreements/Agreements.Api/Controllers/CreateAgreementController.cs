@@ -130,8 +130,21 @@ public class CreateAgreementController : ControllerBase
         var recipient = creator.id == creditor.id ? debtor : creditor;
         await _agreementNotificationService.SendAgreementCreatedSms(
             recipient.phone,
-            newAgreement.title,
-            creator.name);
+            newAgreement.id,
+            recipient.name);
+
+        if (!string.IsNullOrWhiteSpace(recipient.email))
+        {
+            await _agreementNotificationService.SendAgreementCreatedEmail(
+                recipient.email,
+                newAgreement.id,
+                newAgreement.title,
+                creator.name,
+                creditor.phone,
+                creditor.name,
+                debtor.phone,
+                debtor.name);
+        }
 
         var response = new CreateAgreementResponse
         {

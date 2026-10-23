@@ -8,9 +8,11 @@ public static class NotificationsModule
         IConfiguration configuration)
     {
         services.Configure<SmsOptions>(configuration.GetSection(SmsOptions.SectionName));
+        services.Configure<BrevoEmailOptions>(configuration.GetSection(BrevoEmailOptions.SectionName));
 
         // The external SMS provider client.
         services.AddScoped<ISmsSender, TermiiSmsSender>();
+        services.AddHttpClient<IEmailSender, BrevoEmailSender>();
 
         return services;
     }
