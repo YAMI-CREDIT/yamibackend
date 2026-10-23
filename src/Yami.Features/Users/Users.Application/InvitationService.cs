@@ -1,13 +1,15 @@
 // Invitation notifications. Builds the invitation wording and delegates the
-// actual delivery to the shared ISmsSender (see the Notifications feature),
-// so the SMS provider is configured and owned in one place.
+// actual delivery to the shared notification senders (see the Notifications
+// feature), so each provider is configured and owned in one place.
 public class InvitationService : IInvitationService
 {
     private readonly ISmsSender _smsSender;
+    private readonly IEmailSender _emailSender;
 
-    public InvitationService(ISmsSender smsSender)
+    public InvitationService(ISmsSender smsSender, IEmailSender emailSender)
     {
         _smsSender = smsSender;
+        _emailSender = emailSender;
     }
 
     public async Task SendInvitationSms(string phone, string inviterName)
@@ -21,13 +23,13 @@ public class InvitationService : IInvitationService
 
     public async Task SendInvitationEmail(string email, string inviterName)
     {
-        // TODO: Replace with a real email provider call.
-        var message =
-            $"Hi, {inviterName} has invited you to join Yami. " +
-            "Click here to register: https://yami.app/register";
+        var htmlContent =
+            $"<html><body><p>Hi, {System.Net.WebUtility.HtmlEncode(inviterName)} has invited you to join Yami.</p>" +
+            "<p><a href=\"https://yami.app/register\">Click here to register</a>.</p></body></html>";
 
-        Console.WriteLine($"INFO: [Email stub] To {email}: {message}");
-
-        await Task.CompletedTask;
+        await _emailSender.SendEmail(
+            email,
+            "You've been invited to join Yami",
+            htmlContent);
     }
 }

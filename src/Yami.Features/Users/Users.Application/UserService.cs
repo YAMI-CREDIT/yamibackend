@@ -65,7 +65,15 @@ public class UserService : IUserService
         }
 
         await _db.SaveChangesAsync();
-        await _registrationNotificationService.SendRegistrationSuccessfulSms(phone);
+        await _registrationNotificationService.SendRegistrationSuccessfulSms(
+            phone,
+            newUser.name);
+        if (!string.IsNullOrWhiteSpace(newUser.email))
+        {
+            await _registrationNotificationService.SendRegistrationSuccessfulEmail(
+                newUser.email,
+                newUser.name);
+        }
 
         return newUser;
     }
