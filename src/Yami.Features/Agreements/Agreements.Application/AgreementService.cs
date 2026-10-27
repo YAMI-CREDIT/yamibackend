@@ -72,4 +72,10 @@ public class AgreementService : IAgreementService
 
         return await query.ToListAsync();
     }
+
+    public async Task UpdateAgreement(Agreement agreement)
+    {
+        _db.Agreements.Update(agreement);
+        await _db.SaveChangesAsync();
+    }
 }

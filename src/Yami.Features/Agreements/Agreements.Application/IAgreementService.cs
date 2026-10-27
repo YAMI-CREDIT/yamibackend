@@ -8,4 +8,5 @@ public interface IAgreementService
         DateTime? acceptedAt, DateTime? settledAt, RepaymentPlan repaymentPlan);
     Task<IReadOnlyList<Agreement>> GetAgreements(
         Guid? id = null, Guid? creditorId = null, Guid? debtorId = null);
+    Task UpdateAgreement(Agreement agreement);
 }

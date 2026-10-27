@@ -127,6 +127,8 @@ builder.Services.AddCors(options =>
 // configure swagger
 builder.Services.AddSwaggerGen(options =>
 {
+    options.DocumentFilter<FeatureControllerOrderDocumentFilter>();
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
