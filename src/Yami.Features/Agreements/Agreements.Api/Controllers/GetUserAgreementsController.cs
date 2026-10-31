@@ -60,8 +60,6 @@ public class GetUserAgreementsController : ControllerBase
     [HttpGet("{agreementId:guid}/installments")]
     [Authorize]
     [ProducesResponseType(typeof(GetAgreementInstallmentsResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAgreementInstallments(Guid agreementId)
     {
         var sub = User.FindFirst("sub")?.Value;
