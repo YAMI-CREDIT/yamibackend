@@ -13,7 +13,7 @@ public enum RepaymentPlan
     weekly,   // debtor will pay weekly,
     monthly,  // debtor will pay monthly,
     lumpSum, // debtor will pay one lump sum by the agreed date,
-    custom,  // debtor will pay as per the agreed custom terms
+    custom,  // currently represented as one installment due on the agreement dueDate
 }
 
 public class Agreement

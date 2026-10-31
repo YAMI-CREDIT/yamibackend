@@ -1,6 +1,17 @@
+public enum AgreementAcceptanceResult
+{
+    Accepted,
+    DeadlinePassed,
+    InstallmentsUnavailable
+}
+
+public sealed record AgreementCreationResult(
+    Agreement agreement,
+    IReadOnlyList<Installment> installments);
+
 public interface IAgreementService
 {
-    Task<Agreement?> CreateAgreement(
+    Task<AgreementCreationResult?> CreateAgreement(
         Guid creditorId, string? creditorName, Guid debtorId,
         string? debtorName, bool creditorConsent, bool debtorConsent, string? purpose,
         string title, decimal amountTotal, decimal? amountPaid, string currency,
@@ -8,5 +19,5 @@ public interface IAgreementService
         DateTime? acceptedAt, DateTime? settledAt, RepaymentPlan repaymentPlan);
     Task<IReadOnlyList<Agreement>> GetAgreements(
         Guid? id = null, Guid? creditorId = null, Guid? debtorId = null);
-    Task UpdateAgreement(Agreement agreement);
+    Task<AgreementAcceptanceResult> AcceptAgreement(Agreement agreement);
 }

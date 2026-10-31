@@ -59,6 +59,15 @@ public class UpdateAgreementController : ControllerBase
             });
         }
 
+        if (agreement.createdBy == user.id)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                code = "creator_cannot_accept",
+                error = "The agreement creator cannot accept the agreement."
+            });
+        }
+
         if (agreement.status == AgreementStatus.Accepted)
         {
             return Conflict(new { error = "The agreement has already been accepted." });
@@ -81,9 +90,24 @@ public class UpdateAgreementController : ControllerBase
             }
         }
 
-        agreement.status = AgreementStatus.Accepted;
-        agreement.acceptedAt = DateTime.UtcNow;
-        await _agreementService.UpdateAgreement(agreement);
+        var acceptanceResult = await _agreementService.AcceptAgreement(agreement);
+        if (acceptanceResult == AgreementAcceptanceResult.DeadlinePassed)
+        {
+            return Conflict(new
+            {
+                code = "acceptance_deadline_passed",
+                error = "The acceptance deadline has passed."
+            });
+        }
+
+        if (acceptanceResult == AgreementAcceptanceResult.InstallmentsUnavailable)
+        {
+            return Conflict(new
+            {
+                code = "installments_unavailable",
+                error = "The agreement has no installments to accept."
+            });
+        }
 
         return Ok(new { agreementAccepted = true, agreementId = agreement.id });
     }

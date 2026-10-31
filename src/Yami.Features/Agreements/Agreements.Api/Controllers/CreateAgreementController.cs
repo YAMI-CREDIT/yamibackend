@@ -56,6 +56,11 @@ public class CreateAgreementController : ControllerBase
             return BadRequest(new { error = "amountTotal must be greater than 0." });
         }
 
+        if (request.amountTotal != decimal.Round(request.amountTotal, 2))
+        {
+            return BadRequest(new { error = "amountTotal must have no more than 2 decimal places." });
+        }
+
         if (request.creditorId == Guid.Empty || request.debtorId == Guid.Empty)
         {
             return BadRequest(new { error = "creditorId and debtorId are required" });
@@ -64,6 +69,11 @@ public class CreateAgreementController : ControllerBase
         if (request.dueDate <= DateOnly.FromDateTime(DateTime.UtcNow))
         {
             return BadRequest(new { error = "dueDate must be in the future." });
+        }
+
+        if (!Enum.IsDefined(request.repaymentPlan))
+        {
+            return BadRequest(new { error = "repaymentPlan is invalid." });
         }
 
        var creditor = await _userService.GetUser(request.creditorId);
@@ -103,7 +113,7 @@ public class CreateAgreementController : ControllerBase
             return Unauthorized(new { error = "The authenticated user is not a party to this agreement." });
         }
 
-        var newAgreement = await _agreementService.CreateAgreement(
+        var creationResult = await _agreementService.CreateAgreement(
             creditor.id, creditor.name,
             debtor.id, debtor.name,
             creditorConsent: consentByCreditor,
@@ -120,11 +130,12 @@ public class CreateAgreementController : ControllerBase
             settledAt: null,
             repaymentPlan: request.repaymentPlan);
 
-        if (newAgreement is null)
+        if (creationResult is null)
         {
             return Conflict(new { error = "The agreement could not be created." });
         }
 
+        var newAgreement = creationResult.agreement;
         var recipient = creator.id == creditor.id ? debtor : creditor;
         await _agreementNotificationService.SendAgreementCreatedSms(
             recipient.phone,
@@ -138,6 +149,8 @@ public class CreateAgreementController : ControllerBase
                 recipient.name,
                 newAgreement.id,
                 newAgreement.title,
+                creationResult.installments,
+                newAgreement.currency,
                 creator.name,
                 creditor.phone,
                 creditor.name,
@@ -152,6 +165,8 @@ public class CreateAgreementController : ControllerBase
                 creator.name,
                 newAgreement.id,
                 newAgreement.title,
+                creationResult.installments,
+                newAgreement.currency,
                 creator.name,
                 creditor.phone,
                 creditor.name,
@@ -159,13 +174,19 @@ public class CreateAgreementController : ControllerBase
                 debtor.name);
             }
 
-        var response = new CreateAgreementResponse
+        return StatusCode(201, new CreateAgreementResponse
         {
             agreementCreated = true,
-            agreementId = newAgreement.id
-        };
-
-        return StatusCode(201, response);
+            agreementId = newAgreement.id,
+            currency = newAgreement.currency,
+            installments = creationResult.installments
+                .Select(installment => new CreateAgreementInstallmentResponse
+                {
+                    dueDate = installment.dueDate,
+                    amountDue = installment.amountDue
+                })
+                .ToList()
+        });
     }
 
     [HttpPost("invite-debtor")]
@@ -233,9 +254,19 @@ public class CreateAgreementController : ControllerBase
             return BadRequest(new { error = "amountTotal must be greater than 0." });
         }
 
+        if (amountTotal != decimal.Round(amountTotal, 2))
+        {
+            return BadRequest(new { error = "amountTotal must have no more than 2 decimal places." });
+        }
+
         if (dueDate <= DateOnly.FromDateTime(DateTime.UtcNow))
         {
             return BadRequest(new { error = "dueDate must be in the future." });
+        }
+
+        if (!Enum.IsDefined(repaymentPlan))
+        {
+            return BadRequest(new { error = "repaymentPlan is invalid." });
         }
 
         if (string.IsNullOrWhiteSpace(counterpartyPhone))
@@ -266,7 +297,7 @@ public class CreateAgreementController : ControllerBase
         var debtorId = isInvitingCreditor ? inviter.id : counterpartyId;
         string? debtorName = isInvitingCreditor ? inviter.name : null;
 
-        var newAgreement = await _agreementService.CreateAgreement(
+        var creationResult = await _agreementService.CreateAgreement(
             creditorId, creditorName,
             debtorId, debtorName,
             creditorConsent: isInvitingDebtor,
@@ -283,11 +314,12 @@ public class CreateAgreementController : ControllerBase
             settledAt: null,
             repaymentPlan: repaymentPlan);
 
-        if (newAgreement is null)
+        if (creationResult is null)
         {
             return Conflict(new { error = "The agreement could not be created." });
         }
 
+        var newAgreement = creationResult.agreement;
         var invitation = await _userService.InviteToAgreement(
             counterpartyPhone,
             newAgreement.id,
@@ -299,12 +331,18 @@ public class CreateAgreementController : ControllerBase
             return Conflict(new { error = "The agreement was created, but the invitation could not be created." });
         }
 
-        var response = new CreateAgreementResponse
+        return StatusCode(201, new CreateAgreementResponse
         {
             agreementCreated = true,
-            agreementId = newAgreement.id
-        };
-
-        return StatusCode(201, response);
+            agreementId = newAgreement.id,
+            currency = newAgreement.currency,
+            installments = creationResult.installments
+                .Select(installment => new CreateAgreementInstallmentResponse
+                {
+                    dueDate = installment.dueDate,
+                    amountDue = installment.amountDue
+                })
+                .ToList()
+            });
     }
 }
