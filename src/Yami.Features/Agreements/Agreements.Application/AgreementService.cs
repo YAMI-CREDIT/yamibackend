@@ -9,35 +9,61 @@ public class AgreementService : IAgreementService
         _db = db;
     }
     
-    // this function is a placeholder to create a new agreement.
-    // The controller will be implemented later
-    public async Task<Agreement?> CreateAgreement(
-        Guid creditorId, string creditorName, Guid debtorId,
-        string debtorName, string title, decimal amountTotal, DateTime dueDate)
+    public async Task<AgreementCreationResult?> CreateAgreement(
+        Guid creditorId, string? creditorName, Guid debtorId,
+        string? debtorName, bool creditorConsent, bool debtorConsent, string? purpose,
+        string title, decimal amountTotal, decimal? amountPaid, string currency,
+        DateOnly dueDate, Guid createdBy, AgreementStatus status,
+        DateTime? acceptedAt, DateTime? settledAt, RepaymentPlan repaymentPlan)
     {
+        if (!Enum.IsDefined(repaymentPlan))
+        {
+            return null;
+        }
+
         var newAgreement = new Agreement
         {
+            id = Guid.NewGuid(),
             creditorId = creditorId,
             creditorName = creditorName,
             debtorId = debtorId,
             debtorName = debtorName,
+            creditorConsent = creditorConsent,
+            debtorConsent = debtorConsent,
+            purpose = purpose,
             title = title,
             amountTotal = amountTotal,
+            amountPaid = amountPaid,
+            currency = currency,
             dueDate = dueDate,
-            createdAt = DateTime.UtcNow
+            createdAt = DateTime.UtcNow,
+            createdBy = createdBy,
+            status = status,
+            acceptedAt = acceptedAt,
+            settledAt = settledAt,
+            repaymentPlan = repaymentPlan
         };
 
+        var installments = InstallmentSchedule.Create(newAgreement);
+        if (installments is null || installments.Count == 0)
+        {
+            return null;
+        }
+
         _db.Agreements.Add(newAgreement);
+        _db.Installments.AddRange(installments);
         await _db.SaveChangesAsync();
 
-        return newAgreement;
+        return new AgreementCreationResult(
+            newAgreement,
+            installments);
     }
     public async Task<IReadOnlyList<Agreement>> GetAgreements(
         Guid? id = null, Guid? creditorId = null, Guid? debtorId = null)
     {
         if (id == null && creditorId == null && debtorId == null)
         {
-            return null;
+            return [];
         }
 
         var query = _db.Agreements.AsQueryable();
@@ -58,5 +84,35 @@ public class AgreementService : IAgreementService
         }
 
         return await query.ToListAsync();
+    }
+
+    public async Task<AgreementAcceptanceResult> AcceptAgreement(Agreement agreement)
+    {
+        var installments = await _db.Installments
+            .Where(i => i.agreementId == agreement.id)
+            .OrderBy(i => i.dueDate)
+            .ToListAsync();
+
+        if (installments.Count == 0)
+        {
+            return AgreementAcceptanceResult.InstallmentsUnavailable;
+        }
+
+        var acceptedAt = DateTime.UtcNow;
+        if (DateOnly.FromDateTime(acceptedAt) > installments[0].dueDate)
+        {
+            return AgreementAcceptanceResult.DeadlinePassed;
+        }
+
+        agreement.status = AgreementStatus.Accepted;
+        agreement.acceptedAt = acceptedAt;
+        foreach (var installment in installments)
+        {
+            installment.acceptedAt = acceptedAt;
+        }
+
+        _db.Agreements.Update(agreement);
+        await _db.SaveChangesAsync();
+        return AgreementAcceptanceResult.Accepted;
     }
 }

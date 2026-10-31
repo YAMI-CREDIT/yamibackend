@@ -27,6 +27,9 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("acceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<decimal?>("amountPaid")
                         .HasColumnType("numeric");
 
@@ -36,22 +39,45 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                     b.Property<DateTime>("createdAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("createdBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("creditorConsent")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid>("creditorId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("creditorName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("currency")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("debtorConsent")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("debtorId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("debtorName")
-                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("dueDate")
+                    b.Property<DateOnly>("dueDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("purpose")
+                        .HasColumnType("text");
+
+                    b.Property<int>("repaymentPlan")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("settledAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("title")
                         .IsRequired()
@@ -60,6 +86,40 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                     b.HasKey("id");
 
                     b.ToTable("Agreements");
+                });
+
+            modelBuilder.Entity("Installment", b =>
+                {
+                    b.Property<Guid>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("acceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("agreementId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("amountDue")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateOnly>("dueDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("agreementId");
+
+                    b.ToTable("Installments");
+                });
+
+            modelBuilder.Entity("Installment", b =>
+                {
+                    b.HasOne("Agreement", null)
+                        .WithMany()
+                        .HasForeignKey("agreementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

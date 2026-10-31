@@ -6,4 +6,5 @@ public class UsersDbContext : DbContext
     public UsersDbContext(DbContextOptions<UsersDbContext> options) : base(options) { }
 
     public DbSet<User> Users { get; set; } // maps to the "Users" table
+    public DbSet<Invitation> Invitations { get; set; } // maps to the "Invitations" table
 }

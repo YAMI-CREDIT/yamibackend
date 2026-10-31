@@ -23,6 +23,8 @@ public static class UsersModule
             options.UseNpgsql(connectionString));
 
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IInvitationService, InvitationService>();
+        services.AddScoped<IRegistrationNotificationService, RegistrationNotificationService>();
 
         services.AddControllers()
             .AddApplicationPart(typeof(RegisterUserController).Assembly);

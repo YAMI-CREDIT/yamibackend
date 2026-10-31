@@ -18,7 +18,7 @@ public class RegisterUserController : ControllerBase
     }
     
     [HttpPost]
-    [Authorize]         // This ensure ths authorization middleware has run before allowing the rest of the code to continue
+    [Authorize(Policy = "RegistrationToken")]
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
@@ -38,6 +38,12 @@ public class RegisterUserController : ControllerBase
             return Unauthorized(new { error = "sub cannot be empty" });
         }
 
+        var phoneNumberVerified = User.FindFirst("phone_number_verified")?.Value;
+        if (!bool.TryParse(phoneNumberVerified, out var isPhoneNumberVerified) || !isPhoneNumberVerified)
+        {
+            return Unauthorized(new { error = "Phone number must be verified by the auth provider before registration." });
+        }
+
         if (phoneNumber != request.phone)
         {
             return  Unauthorized(new { error = "invalid credentials. Unable to validate phone number" });
@@ -46,14 +52,8 @@ public class RegisterUserController : ControllerBase
         string phone = request.phone;
         string name = request.name;
         string? email = request.email;
-        bool termsAccepted = true;
-        string? businessName = null;
-        string? cacNo = null;
-        string? area = null;
-        string? identityType = null;
-        string? identityNumber = null;
-        string? userType = null;
         string? dateOfBirth = request.dateOfBirth;
+        bool termsAccepted = true;
 
         if (string.IsNullOrWhiteSpace(phone) || string.IsNullOrWhiteSpace(name))
         {
@@ -62,9 +62,7 @@ public class RegisterUserController : ControllerBase
 
 
         var newUser = await _userService.RegisterUser(
-            phone, name, sub, dateOfBirth, email,
-            termsAccepted, area, identityType,
-            identityNumber, userType);
+            phone, name, sub, dateOfBirth, email, termsAccepted);
 
         // I would not expect us to fufil this condition as cognito should not allow
         // the registration in the first place.
@@ -75,10 +73,16 @@ public class RegisterUserController : ControllerBase
 
         Business? newBusiness = null;
 
+        // Business registration fields. Kept together so this block can be
+        // extracted into its own endpoint later.
+        string? businessName = null;
+        string? cacNo = null;
+        string? area = null;
+
         if (!string.IsNullOrWhiteSpace(businessName))
         {
             // string name = businessName;
-            string userId = newUser.id.ToString();
+            Guid userId = newUser.id;
             string? registrationNo = cacNo;
             newBusiness = await _businessService.RegisterBusiness(
                 businessName, userId, registrationNo, area

@@ -10,7 +10,7 @@ public class BusinessService : IBusinessService
 
     // This is the actual Registration logic
     public async Task<Business?> RegisterBusiness(
-        string name, string userId,
+        string name, Guid userId,
         string? registrationNo, string area)
     {
         bool alreadyExists = await _db.Businesses
@@ -37,7 +37,7 @@ public class BusinessService : IBusinessService
     }
 
     // Placeholder logic to get business details from DB, to be implemented later if required
-    public async Task<Business?> GetBusiness(string id)
+    public async Task<Business?> GetBusiness(Guid id)
     {
         Console.WriteLine($"Getting business by ID: {id}");
         return await _db.Businesses.FindAsync(id);

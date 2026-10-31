@@ -11,5 +11,11 @@ public interface IUserService
         string? identityType=null, string? identityNumber=null,
         string? userType=null);
     Task<User?> GetUser(Guid id);
+    Task<User?> GetUserBySub(string sub);
+    Task<User?> GetUserByPhone(string phone);
+    Task<Invitation?> GetPendingInvitationByPhone(string phone);
     Task<bool> SetVerified(Guid id, bool verified);
+    Task<Invitation?> InviteToAgreement(string phone, Guid agreementId, Guid invitedBy, Guid preAllocatedId);
+    Task<bool> InviteByPhone(string phone, Guid invitedBy);
+    Task<bool> InviteByEmail(string email, Guid invitedBy);
 }
