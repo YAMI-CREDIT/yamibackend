@@ -86,6 +86,14 @@ public class AgreementService : IAgreementService
         return await query.ToListAsync();
     }
 
+    public async Task<IReadOnlyList<Installment>> GetInstallments(Guid agreementId)
+    {
+        return await _db.Installments
+            .Where(installment => installment.agreementId == agreementId)
+            .OrderBy(installment => installment.dueDate)
+            .ToListAsync();
+    }
+
     public async Task<AgreementAcceptanceResult> AcceptAgreement(Agreement agreement)
     {
         var installments = await _db.Installments
