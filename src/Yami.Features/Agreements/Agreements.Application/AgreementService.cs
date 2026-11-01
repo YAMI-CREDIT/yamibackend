@@ -94,6 +94,44 @@ public class AgreementService : IAgreementService
             .ToListAsync();
     }
 
+    public Task<IReadOnlyList<UpcomingInstallment>> GetUpcomingInstallmentsOwed(Guid userId, int days)
+    {
+        return GetUpcomingInstallments(userId, days, isDebtor: true);
+    }
+
+    public Task<IReadOnlyList<UpcomingInstallment>> GetUpcomingInstallmentsExpected(Guid userId, int days)
+    {
+        return GetUpcomingInstallments(userId, days, isDebtor: false);
+    }
+
+    private async Task<IReadOnlyList<UpcomingInstallment>> GetUpcomingInstallments(
+        Guid userId, int days, bool isDebtor)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var end = today.AddDays(days);
+
+        var query = from installment in _db.Installments
+                    join agreement in _db.Agreements on installment.agreementId equals agreement.id
+                    where agreement.status == AgreementStatus.Accepted
+                        && installment.dueDate >= today
+                        && installment.dueDate <= end
+                    select new { installment, agreement };
+
+        query = isDebtor
+            ? query.Where(item => item.agreement.debtorId == userId)
+            : query.Where(item => item.agreement.creditorId == userId);
+
+        return await query
+            .OrderBy(item => item.installment.dueDate)
+            .Select(item => new UpcomingInstallment(
+                item.agreement.id,
+                item.agreement.title,
+                item.agreement.currency,
+                item.installment.dueDate,
+                item.installment.amountDue))
+            .ToListAsync();
+    }
+
     public async Task<AgreementAcceptanceResult> AcceptAgreement(Agreement agreement)
     {
         var installments = await _db.Installments

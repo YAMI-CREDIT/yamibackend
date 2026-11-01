@@ -9,6 +9,13 @@ public sealed record AgreementCreationResult(
     Agreement agreement,
     IReadOnlyList<Installment> installments);
 
+public sealed record UpcomingInstallment(
+    Guid agreementId,
+    string title,
+    string currency,
+    DateOnly dueDate,
+    decimal amountDue);
+
 public interface IAgreementService
 {
     Task<AgreementCreationResult?> CreateAgreement(
@@ -20,5 +27,7 @@ public interface IAgreementService
     Task<IReadOnlyList<Agreement>> GetAgreements(
         Guid? id = null, Guid? creditorId = null, Guid? debtorId = null);
     Task<IReadOnlyList<Installment>> GetInstallments(Guid agreementId);
+    Task<IReadOnlyList<UpcomingInstallment>> GetUpcomingInstallmentsOwed(Guid userId, int days);
+    Task<IReadOnlyList<UpcomingInstallment>> GetUpcomingInstallmentsExpected(Guid userId, int days);
     Task<AgreementAcceptanceResult> AcceptAgreement(Agreement agreement);
 }

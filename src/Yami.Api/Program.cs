@@ -167,6 +167,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Yami API v1");
+        options.ConfigObject.AdditionalItems["operationsSorter"] = "alpha";
     });
 }
 
