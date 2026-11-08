@@ -87,4 +87,58 @@ public class AgreementNotificationService : IAgreementNotificationService
                 "Failed to send agreement-created email.");
         }
     }
+
+    public async Task SendAgreementAcceptedEmail(
+        string email,
+        string recipientName,
+        Guid agreementId,
+        string agreementTitle,
+        DateTime acceptedAt,
+        IReadOnlyList<Installment> installments,
+        string currency,
+        string creditorPhone,
+        string creditorName,
+        string debtorPhone,
+        string debtorName)
+    {
+        var encodedRecipientName = System.Net.WebUtility.HtmlEncode(recipientName);
+        var encodedTitle = System.Net.WebUtility.HtmlEncode(agreementTitle);
+        var encodedCurrency = System.Net.WebUtility.HtmlEncode(currency);
+        var encodedCreditorName = System.Net.WebUtility.HtmlEncode(creditorName);
+        var encodedDebtorName = System.Net.WebUtility.HtmlEncode(debtorName);
+        var encodedCreditorPhone = System.Net.WebUtility.HtmlEncode(creditorPhone);
+        var encodedDebtorPhone = System.Net.WebUtility.HtmlEncode(debtorPhone);
+        var acceptanceTime = acceptedAt.ToString(
+            "yyyy-MM-dd HH:mm 'UTC'",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var schedule = string.Join("<br>", installments
+            .Select((installment, index) =>
+                $"Installment {index + 1}: {installment.dueDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)} - " +
+                $"{installment.amountDue.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)} {encodedCurrency}"));
+
+        var htmlContent =
+            $"Hi {encodedRecipientName},<br>" +
+            "Your agreement has been accepted on YAMI.<br>" +
+            $"Agreement ID: {agreementId}<br>" +
+            $"Title: {encodedTitle}<br>" +
+            $"Accepted at: {acceptanceTime}<br>" +
+            $"Creditor: {encodedCreditorPhone} (Registered name: {encodedCreditorName})<br>" +
+            $"Debtor: {encodedDebtorPhone} (Registered name: {encodedDebtorName})<br>" +
+            "Repayment schedule:<br>" +
+            $"{schedule}";
+
+        try
+        {
+            await _emailSender.SendEmail(
+                email,
+                "Your agreement has been accepted on YAMI",
+                htmlContent);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Failed to send agreement-accepted email.");
+        }
+    }
 }

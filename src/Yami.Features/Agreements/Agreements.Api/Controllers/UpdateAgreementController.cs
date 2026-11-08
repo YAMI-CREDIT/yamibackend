@@ -10,13 +10,16 @@ public class UpdateAgreementController : ControllerBase
 {
     private readonly IAgreementService _agreementService;
     private readonly IUserService _userService;
+    private readonly IAgreementNotificationService _agreementNotificationService;
 
     public UpdateAgreementController(
         IAgreementService agreementService,
-        IUserService userService)
+        IUserService userService,
+        IAgreementNotificationService agreementNotificationService)
     {
         _agreementService = agreementService;
         _userService = userService;
+        _agreementNotificationService = agreementNotificationService;
     }
 
     [HttpPost("accept")]
@@ -68,6 +71,22 @@ public class UpdateAgreementController : ControllerBase
             });
         }
 
+        var creditor = agreement.creditorId == user.id
+            ? user
+            : await _userService.GetUser(agreement.creditorId);
+        var debtor = agreement.debtorId == user.id
+            ? user
+            : await _userService.GetUser(agreement.debtorId);
+
+        if (creditor is null || debtor is null)
+        {
+            return Conflict(new
+            {
+                code = "agreement_party_not_found",
+                error = "Could not find both parties to the agreement."
+            });
+        }
+
         if (agreement.status == AgreementStatus.Accepted)
         {
             return Conflict(new { error = "The agreement has already been accepted." });
@@ -109,11 +128,58 @@ public class UpdateAgreementController : ControllerBase
             });
         }
 
-        var installments = await _agreementService.GetInstallments(agreement.id);
+        var agreementId = agreement.id;
+        var agreementTitle = agreement.title;
+        var acceptedAt = agreement.acceptedAt!.Value;
+        var currency = agreement.currency;
+        var installments = await _agreementService.GetInstallments(agreementId);
+        var creditorPhone = creditor.phone;
+        var creditorName = creditor.name;
+        var creditorEmail = creditor.email;
+        var debtorPhone = debtor.phone;
+        var debtorName = debtor.name;
+        var debtorEmail = debtor.email;
+
+        if (!string.IsNullOrWhiteSpace(creditorEmail))
+        {
+            var recipientName = creditorName;
+            var recipientEmail = creditorEmail;
+            await _agreementNotificationService.SendAgreementAcceptedEmail(
+                recipientEmail,
+                recipientName,
+                agreementId,
+                agreementTitle,
+                acceptedAt,
+                installments,
+                currency,
+                creditorPhone,
+                creditorName,
+                debtorPhone,
+                debtorName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(debtorEmail))
+        {
+            var recipientName = debtorName;
+            var recipientEmail = debtorEmail;
+            await _agreementNotificationService.SendAgreementAcceptedEmail(
+                recipientEmail,
+                recipientName,
+                agreementId,
+                agreementTitle,
+                acceptedAt,
+                installments,
+                currency,
+                creditorPhone,
+                creditorName,
+                debtorPhone,
+                debtorName);
+        }
+
         return Ok(new AcceptAgreementResponse
         {
             agreementAccepted = true,
-            agreementId = agreement.id,
+            agreementId = agreementId,
             installments = installments
                 .Select(installment => new AgreementInstallmentResponse
                 {
