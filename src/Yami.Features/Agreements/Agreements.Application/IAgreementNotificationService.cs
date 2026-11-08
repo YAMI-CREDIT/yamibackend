@@ -16,5 +16,6 @@ public interface IAgreementNotificationService
         string creditorPhone,
         string creditorName,
         string debtorPhone,
-        string debtorName);
+        string debtorName,
+        DateTime acceptBy);
 }

@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 
 public class AgreementService : IAgreementService
 {
+    public const int AcceptanceWindowHours = 48;
+
     private readonly AgreementsDbContext _db;
 
     public AgreementService(AgreementsDbContext db)
@@ -145,7 +147,7 @@ public class AgreementService : IAgreementService
         }
 
         var acceptedAt = DateTime.UtcNow;
-        if (DateOnly.FromDateTime(acceptedAt) > installments[0].dueDate)
+        if (acceptedAt > agreement.createdAt.AddHours(AcceptanceWindowHours))
         {
             return AgreementAcceptanceResult.DeadlinePassed;
         }

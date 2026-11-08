@@ -136,6 +136,7 @@ public class CreateAgreementController : ControllerBase
         }
 
         var newAgreement = creationResult.agreement;
+        var acceptBy = newAgreement.createdAt.AddHours(AgreementService.AcceptanceWindowHours);
         var recipient = creator.id == creditor.id ? debtor : creditor;
         await _agreementNotificationService.SendAgreementCreatedSms(
             recipient.phone,
@@ -155,7 +156,8 @@ public class CreateAgreementController : ControllerBase
                 creditor.phone,
                 creditor.name,
                 debtor.phone,
-                debtor.name);
+                debtor.name,
+                acceptBy);
         }
 
         if (!string.IsNullOrWhiteSpace(creator.email))
@@ -171,7 +173,8 @@ public class CreateAgreementController : ControllerBase
                 creditor.phone,
                 creditor.name,
                 debtor.phone,
-                debtor.name);
+                debtor.name,
+                acceptBy);
             }
 
         return StatusCode(201, new CreateAgreementResponse

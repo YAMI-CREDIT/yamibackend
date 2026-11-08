@@ -52,7 +52,8 @@ public class AgreementNotificationService : IAgreementNotificationService
         string creditorPhone,
         string creditorName,
         string debtorPhone,
-        string debtorName)
+        string debtorName,
+        DateTime acceptBy)
     {
         var encodedRecipientName = System.Net.WebUtility.HtmlEncode(recipientName);
         var encodedTitle = System.Net.WebUtility.HtmlEncode(agreementTitle);
@@ -63,8 +64,8 @@ public class AgreementNotificationService : IAgreementNotificationService
         var orderedInstallments = installments
             .OrderBy(installment => installment.dueDate)
             .ToList();
-        var acceptanceDeadline = orderedInstallments[0].dueDate.ToString(
-            "yyyy-MM-dd",
+        var acceptanceDeadline = acceptBy.ToString(
+            "yyyy-MM-dd HH:mm",
             System.Globalization.CultureInfo.InvariantCulture);
         var schedule = string.Join("<br>", orderedInstallments
             .Select((installment, index) =>
