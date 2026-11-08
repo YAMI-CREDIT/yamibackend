@@ -11,7 +11,7 @@ public class AgreementService : IAgreementService
         _db = db;
     }
     
-    public async Task<AgreementCreationResult?> CreateAgreement(
+    public async Task<Agreement?> CreateAgreement(
         Guid creditorId, string? creditorName, Guid debtorId,
         string? debtorName, bool creditorConsent, bool debtorConsent, string? purpose,
         string title, decimal amountTotal, decimal? amountPaid, string currency,
@@ -46,19 +46,10 @@ public class AgreementService : IAgreementService
             repaymentPlan = repaymentPlan
         };
 
-        var installments = InstallmentSchedule.Create(newAgreement);
-        if (installments is null || installments.Count == 0)
-        {
-            return null;
-        }
-
         _db.Agreements.Add(newAgreement);
-        _db.Installments.AddRange(installments);
         await _db.SaveChangesAsync();
 
-        return new AgreementCreationResult(
-            newAgreement,
-            installments);
+        return newAgreement;
     }
     public async Task<IReadOnlyList<Agreement>> GetAgreements(
         Guid? id = null, Guid? creditorId = null, Guid? debtorId = null)
@@ -136,29 +127,28 @@ public class AgreementService : IAgreementService
 
     public async Task<AgreementAcceptanceResult> AcceptAgreement(Agreement agreement)
     {
-        var installments = await _db.Installments
-            .Where(i => i.agreementId == agreement.id)
-            .OrderBy(i => i.dueDate)
-            .ToListAsync();
-
-        if (installments.Count == 0)
-        {
-            return AgreementAcceptanceResult.InstallmentsUnavailable;
-        }
-
         var acceptedAt = DateTime.UtcNow;
         if (acceptedAt > agreement.createdAt.AddHours(AcceptanceWindowHours))
         {
             return AgreementAcceptanceResult.DeadlinePassed;
         }
 
+        var acceptedInstallments = InstallmentSchedule.Create(
+            agreement,
+            DateOnly.FromDateTime(acceptedAt));
+        if (acceptedInstallments is null || acceptedInstallments.Count == 0)
+        {
+            return AgreementAcceptanceResult.InstallmentsUnavailable;
+        }
+
         agreement.status = AgreementStatus.Accepted;
         agreement.acceptedAt = acceptedAt;
-        foreach (var installment in installments)
+        foreach (var installment in acceptedInstallments)
         {
             installment.acceptedAt = acceptedAt;
         }
 
+        _db.Installments.AddRange(acceptedInstallments);
         _db.Agreements.Update(agreement);
         await _db.SaveChangesAsync();
         return AgreementAcceptanceResult.Accepted;

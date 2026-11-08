@@ -10,8 +10,6 @@ public interface IAgreementNotificationService
         string recipientName,
         Guid agreementId,
         string agreementTitle,
-        IReadOnlyList<Installment> installments,
-        string currency,
         string creatorName,
         string creditorPhone,
         string creditorName,

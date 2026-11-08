@@ -5,10 +5,6 @@ public enum AgreementAcceptanceResult
     InstallmentsUnavailable
 }
 
-public sealed record AgreementCreationResult(
-    Agreement agreement,
-    IReadOnlyList<Installment> installments);
-
 public sealed record UpcomingInstallment(
     Guid agreementId,
     string title,
@@ -18,7 +14,7 @@ public sealed record UpcomingInstallment(
 
 public interface IAgreementService
 {
-    Task<AgreementCreationResult?> CreateAgreement(
+    Task<Agreement?> CreateAgreement(
         Guid creditorId, string? creditorName, Guid debtorId,
         string? debtorName, bool creditorConsent, bool debtorConsent, string? purpose,
         string title, decimal amountTotal, decimal? amountPaid, string currency,

@@ -21,7 +21,7 @@ public class UpdateAgreementController : ControllerBase
 
     [HttpPost("accept")]
     [Authorize]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AcceptAgreementResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> AcceptAgreement([FromBody] AcceptAgreementRequest request)
     {
         var sub = User.FindFirst("sub")?.Value;
@@ -109,6 +109,18 @@ public class UpdateAgreementController : ControllerBase
             });
         }
 
-        return Ok(new { agreementAccepted = true, agreementId = agreement.id });
+        var installments = await _agreementService.GetInstallments(agreement.id);
+        return Ok(new AcceptAgreementResponse
+        {
+            agreementAccepted = true,
+            agreementId = agreement.id,
+            installments = installments
+                .Select(installment => new AgreementInstallmentResponse
+                {
+                    dueDate = installment.dueDate,
+                    amountDue = installment.amountDue
+                })
+                .ToList()
+        });
     }
 }

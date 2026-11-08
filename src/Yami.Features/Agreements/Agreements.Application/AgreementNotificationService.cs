@@ -46,8 +46,6 @@ public class AgreementNotificationService : IAgreementNotificationService
         string recipientName,
         Guid agreementId,
         string agreementTitle,
-        IReadOnlyList<Installment> installments,
-        string currency,
         string creatorName,
         string creditorPhone,
         string creditorName,
@@ -60,17 +58,9 @@ public class AgreementNotificationService : IAgreementNotificationService
         var encodedCreatorName = System.Net.WebUtility.HtmlEncode(creatorName);
         var encodedCreditorName = System.Net.WebUtility.HtmlEncode(creditorName);
         var encodedDebtorName = System.Net.WebUtility.HtmlEncode(debtorName);
-        var encodedCurrency = System.Net.WebUtility.HtmlEncode(currency);
-        var orderedInstallments = installments
-            .OrderBy(installment => installment.dueDate)
-            .ToList();
         var acceptanceDeadline = acceptBy.ToString(
             "yyyy-MM-dd HH:mm",
             System.Globalization.CultureInfo.InvariantCulture);
-        var schedule = string.Join("<br>", orderedInstallments
-            .Select((installment, index) =>
-                $"Installment {index + 1}: {installment.dueDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)} - " +
-                $"{installment.amountDue.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)} {encodedCurrency}"));
 
         var htmlContent =
             $"Hi {encodedRecipientName},<br>" +
@@ -78,8 +68,6 @@ public class AgreementNotificationService : IAgreementNotificationService
             $"Agreement ID: {agreementId}<br>" +
             $"Title: {encodedTitle}<br>" +
             $"Accept by: {acceptanceDeadline}<br>" +
-            "Installment schedule:<br>" +
-            $"{schedule}<br>" +
             $"Creator: {encodedCreatorName}<br>" +
             $"Creditor: {System.Net.WebUtility.HtmlEncode(creditorPhone)} (Registered name: {encodedCreditorName})<br>" +
             $"Debtor: {System.Net.WebUtility.HtmlEncode(debtorPhone)} (Registered name: {encodedDebtorName})<br>" +
