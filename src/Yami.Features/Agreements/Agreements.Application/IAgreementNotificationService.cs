@@ -29,4 +29,25 @@ public interface IAgreementNotificationService
         string creditorName,
         string debtorPhone,
         string debtorName);
+
+    Task SendInstallmentPaidEmail(
+        string email,
+        string recipientName,
+        Installment installment,
+        Agreement agreement,
+        string creditorPhone,
+        string creditorName,
+        string debtorPhone,
+        string debtorName);
+
+    Task SendInstallmentPaymentConfirmedEmail(
+        string email,
+        string recipientName,
+        Installment installment,
+        Agreement agreement,
+        decimal totalAmountPaid,
+        string creditorPhone,
+        string creditorName,
+        string debtorPhone,
+        string debtorName);
 }

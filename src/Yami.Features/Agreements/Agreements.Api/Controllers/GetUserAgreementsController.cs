@@ -57,6 +57,46 @@ public class GetUserAgreementsController : ControllerBase
         return Ok(response);
     }
 
+    [HttpGet("{agreementId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(Agreement), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAgreement(Guid agreementId)
+    {
+        var sub = User.FindFirst("sub")?.Value;
+
+        if (sub is null)
+        {
+            return Unauthorized(new { error = "sub cannot be empty. Cannot verify the auth claim." });
+        }
+
+        var user = await _userService.GetUserBySub(sub);
+
+        if (user is null)
+        {
+            return NotFound(new { error = "No user record found for the authenticated claim." });
+        }
+
+        if (user.userSubId != sub)
+        {
+            return Unauthorized(new { error = "The authenticated user does not match the record." });
+        }
+
+        var agreements = await _agreementService.GetAgreements(id: agreementId);
+        var agreement = agreements.FirstOrDefault();
+
+        if (agreement is null)
+        {
+            return NotFound(new { error = "Agreement not found." });
+        }
+
+        if (agreement.creditorId != user.id && agreement.debtorId != user.id)
+        {
+            return Unauthorized(new { error = "The authenticated user is not a party to this agreement." });
+        }
+
+        return Ok(agreement);
+    }
+
     [HttpGet("{agreementId:guid}/installments")]
     [Authorize]
     [ProducesResponseType(typeof(GetAgreementInstallmentsResponse), StatusCodes.Status200OK)]

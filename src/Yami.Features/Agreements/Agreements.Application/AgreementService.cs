@@ -87,6 +87,12 @@ public class AgreementService : IAgreementService
             .ToListAsync();
     }
 
+    public Task<Installment?> GetInstallment(Guid installmentId)
+    {
+        return _db.Installments
+            .FirstOrDefaultAsync(installment => installment.id == installmentId);
+    }
+
     public Task<IReadOnlyList<UpcomingInstallment>> GetUpcomingInstallmentsOwed(Guid userId, int days)
     {
         return GetUpcomingInstallments(userId, days, isDebtor: true);
@@ -152,5 +158,79 @@ public class AgreementService : IAgreementService
         _db.Agreements.Update(agreement);
         await _db.SaveChangesAsync();
         return AgreementAcceptanceResult.Accepted;
+    }
+
+    public async Task<InstallmentPaymentResult> PayInstallment(Guid installmentId, Guid debtorId)
+    {
+        var installment = await _db.Installments
+            .FirstOrDefaultAsync(item => item.id == installmentId);
+        if (installment is null)
+        {
+            return InstallmentPaymentResult.InstallmentNotFound;
+        }
+
+        var agreement = await _db.Agreements
+            .FirstOrDefaultAsync(item => item.id == installment.agreementId);
+        if (agreement is null)
+        {
+            return InstallmentPaymentResult.AgreementNotFound;
+        }
+
+        if (agreement.debtorId != debtorId)
+        {
+            return InstallmentPaymentResult.NotDebtor;
+        }
+
+        if (installment.debtorPaid)
+        {
+            return InstallmentPaymentResult.InstallmentAlreadyPaid;
+        }
+
+        var debtorPaidAt = DateTime.UtcNow;
+        installment.debtorPaid = true;
+        installment.debtorPaidAt = debtorPaidAt;
+
+        await _db.SaveChangesAsync();
+        return InstallmentPaymentResult.Paid;
+    }
+
+    public async Task<InstallmentPaymentConfirmationResult> ConfirmInstallmentPayment(
+        Guid installmentId, Guid creditorId)
+    {
+        var installment = await _db.Installments
+            .FirstOrDefaultAsync(item => item.id == installmentId);
+        if (installment is null)
+        {
+            return InstallmentPaymentConfirmationResult.InstallmentNotFound;
+        }
+
+        var agreement = await _db.Agreements
+            .FirstOrDefaultAsync(item => item.id == installment.agreementId);
+        if (agreement is null)
+        {
+            return InstallmentPaymentConfirmationResult.AgreementNotFound;
+        }
+
+        if (agreement.creditorId != creditorId)
+        {
+            return InstallmentPaymentConfirmationResult.NotCreditor;
+        }
+
+        if (installment.creditorConfirmedPayment)
+        {
+            return InstallmentPaymentConfirmationResult.AlreadyConfirmed;
+        }
+
+        if (!installment.debtorPaid)
+        {
+            return InstallmentPaymentConfirmationResult.InstallmentNotPaid;
+        }
+
+        installment.creditorConfirmedPayment = true;
+        installment.creditorConfirmedPaymentAt = DateTime.UtcNow;
+        agreement.amountPaid = (agreement.amountPaid ?? 0m) + installment.amountDue;
+
+        await _db.SaveChangesAsync();
+        return InstallmentPaymentConfirmationResult.Confirmed;
     }
 }

@@ -1,3 +1,15 @@
+public class GetAgreementInstallmentsResponse
+{
+    public Guid agreementId { get; set; }
+    public IReadOnlyList<AgreementInstallmentResponse> installments { get; set; } = [];
+}
+
+public class AgreementInstallmentResponse
+{
+    public DateOnly dueDate { get; set; }
+    public decimal amountDue { get; set; }
+}
+
 // The authenticated user's installments due within the requested window,
 // across accepted agreements where they owe or expect payment.
 public class GetUpcomingInstallmentsResponse

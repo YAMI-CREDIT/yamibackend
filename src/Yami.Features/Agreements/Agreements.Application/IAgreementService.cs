@@ -5,6 +5,25 @@ public enum AgreementAcceptanceResult
     InstallmentsUnavailable
 }
 
+public enum InstallmentPaymentResult
+{
+    Paid,
+    InstallmentNotFound,
+    AgreementNotFound,
+    InstallmentAlreadyPaid,
+    NotDebtor
+}
+
+public enum InstallmentPaymentConfirmationResult
+{
+    Confirmed,
+    InstallmentNotFound,
+    AgreementNotFound,
+    NotCreditor,
+    InstallmentNotPaid,
+    AlreadyConfirmed
+}
+
 public sealed record UpcomingInstallment(
     Guid agreementId,
     string title,
@@ -22,8 +41,11 @@ public interface IAgreementService
         DateTime? acceptedAt, DateTime? settledAt, RepaymentPlan repaymentPlan);
     Task<IReadOnlyList<Agreement>> GetAgreements(
         Guid? id = null, Guid? creditorId = null, Guid? debtorId = null);
+    Task<Installment?> GetInstallment(Guid installmentId);
     Task<IReadOnlyList<Installment>> GetInstallments(Guid agreementId);
     Task<IReadOnlyList<UpcomingInstallment>> GetUpcomingInstallmentsOwed(Guid userId, int days);
     Task<IReadOnlyList<UpcomingInstallment>> GetUpcomingInstallmentsExpected(Guid userId, int days);
     Task<AgreementAcceptanceResult> AcceptAgreement(Agreement agreement);
+    Task<InstallmentPaymentResult> PayInstallment(Guid installmentId, Guid debtorId);
+    Task<InstallmentPaymentConfirmationResult> ConfirmInstallmentPayment(Guid installmentId, Guid creditorId);
 }

@@ -141,4 +141,132 @@ public class AgreementNotificationService : IAgreementNotificationService
                 "Failed to send agreement-accepted email.");
         }
     }
+
+    public async Task SendInstallmentPaidEmail(
+        string email,
+        string recipientName,
+        Installment installment,
+        Agreement agreement,
+        string creditorPhone,
+        string creditorName,
+        string debtorPhone,
+        string debtorName)
+    {
+        var encodedRecipientName = System.Net.WebUtility.HtmlEncode(recipientName);
+        var encodedTitle = System.Net.WebUtility.HtmlEncode(agreement.title);
+        var encodedCurrency = System.Net.WebUtility.HtmlEncode(agreement.currency);
+        var encodedCreditorName = System.Net.WebUtility.HtmlEncode(creditorName);
+        var encodedDebtorName = System.Net.WebUtility.HtmlEncode(debtorName);
+        var encodedCreditorPhone = System.Net.WebUtility.HtmlEncode(creditorPhone);
+        var encodedDebtorPhone = System.Net.WebUtility.HtmlEncode(debtorPhone);
+        var encodedPurpose = System.Net.WebUtility.HtmlEncode(agreement.purpose ?? "");
+        var installmentAmount = installment.amountDue.ToString(
+            "0.00",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var agreementTotal = agreement.amountTotal.ToString(
+            "0.00",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var dueDate = installment.dueDate.ToString(
+            "yyyy-MM-dd",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var reportedAt = installment.debtorPaidAt?.ToString(
+            "yyyy-MM-dd HH:mm 'UTC'",
+            System.Globalization.CultureInfo.InvariantCulture) ?? "";
+        var purposeLine = string.IsNullOrWhiteSpace(agreement.purpose)
+            ? ""
+            : $"Purpose: {encodedPurpose}<br>";
+
+        var htmlContent =
+            $"Hi {encodedRecipientName},<br>" +
+            "An installment payment has been reported for your agreement on YAMI.<br>" +
+            $"Agreement ID: {agreement.id}<br>" +
+            $"Installment ID: {installment.id}<br>" +
+            $"Title: {encodedTitle}<br>" +
+            purposeLine +
+            $"Installment due date: {dueDate}<br>" +
+            $"Amount reported for this installment: {installmentAmount} {encodedCurrency}<br>" +
+            $"Agreement amount: {agreementTotal} {encodedCurrency}<br>" +
+            $"Reported at: {reportedAt}<br>" +
+            $"Creditor: {encodedCreditorPhone} (Registered name: {encodedCreditorName})<br>" +
+            $"Debtor: {encodedDebtorPhone} (Registered name: {encodedDebtorName})<br>" +
+            "Please log in to YAMI to review the reported payment.";
+
+        try
+        {
+            await _emailSender.SendEmail(
+                email,
+                "Installment payment reported on YAMI",
+                htmlContent);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Failed to send installment-paid email.");
+        }
+    }
+
+    public async Task SendInstallmentPaymentConfirmedEmail(
+        string email,
+        string recipientName,
+        Installment installment,
+        Agreement agreement,
+        decimal totalAmountPaid,
+        string creditorPhone,
+        string creditorName,
+        string debtorPhone,
+        string debtorName)
+    {
+        var encodedRecipientName = System.Net.WebUtility.HtmlEncode(recipientName);
+        var encodedTitle = System.Net.WebUtility.HtmlEncode(agreement.title);
+        var encodedCurrency = System.Net.WebUtility.HtmlEncode(agreement.currency);
+        var encodedCreditorName = System.Net.WebUtility.HtmlEncode(creditorName);
+        var encodedDebtorName = System.Net.WebUtility.HtmlEncode(debtorName);
+        var encodedCreditorPhone = System.Net.WebUtility.HtmlEncode(creditorPhone);
+        var encodedDebtorPhone = System.Net.WebUtility.HtmlEncode(debtorPhone);
+        var encodedPurpose = System.Net.WebUtility.HtmlEncode(agreement.purpose ?? "");
+        var installmentAmount = installment.amountDue.ToString(
+            "0.00",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var paidTotal = totalAmountPaid.ToString(
+            "0.00",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var agreementTotal = agreement.amountTotal.ToString(
+            "0.00",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var dueDate = installment.dueDate.ToString(
+            "yyyy-MM-dd",
+            System.Globalization.CultureInfo.InvariantCulture);
+        var confirmedAt = installment.creditorConfirmedPaymentAt?.ToString(
+            "yyyy-MM-dd HH:mm 'UTC'",
+            System.Globalization.CultureInfo.InvariantCulture) ?? "";
+        var purposeLine = string.IsNullOrWhiteSpace(agreement.purpose)
+            ? ""
+            : $"Purpose: {encodedPurpose}<br>";
+
+        var htmlContent =
+            $"Hi {encodedRecipientName},<br>" +
+            "Your installment payment has been confirmed on YAMI.<br>" +
+            $"Agreement ID: {agreement.id}<br>" +
+            $"Installment ID: {installment.id}<br>" +
+            $"Title: {encodedTitle}<br>" +
+            purposeLine +
+            $"Installment due date: {dueDate}<br>" +
+            $"Confirmed installment amount: {installmentAmount} {encodedCurrency}<br>" +
+            $"Total confirmed paid on this agreement: {paidTotal} {encodedCurrency}<br>" +
+            $"Agreement amount: {agreementTotal} {encodedCurrency}<br>" +
+            $"Confirmed at: {confirmedAt}<br>" +
+            $"Creditor: {encodedCreditorPhone} (Registered name: {encodedCreditorName})<br>" +
+            $"Debtor: {encodedDebtorPhone} (Registered name: {encodedDebtorName})<br>";
+
+        try
+        {
+            await _emailSender.SendEmail(
+                email,
+                "Installment payment confirmed on YAMI",
+                htmlContent);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Failed to send installment-payment-confirmed email.");
+        }
+    }
 }
