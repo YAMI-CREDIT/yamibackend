@@ -7,4 +7,15 @@ public class UsersDbContext : DbContext
 
     public DbSet<User> Users { get; set; } // maps to the "Users" table
     public DbSet<Invitation> Invitations { get; set; } // maps to the "Invitations" table
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>()
+            .HasIndex(user => user.phone)
+            .IsUnique();
+
+        modelBuilder.Entity<User>()
+            .HasIndex(user => user.userSubId)
+            .IsUnique();
+    }
 }

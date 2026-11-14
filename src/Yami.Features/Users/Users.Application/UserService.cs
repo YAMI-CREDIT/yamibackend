@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 public class UserService : IUserService
 {
@@ -24,7 +25,7 @@ public class UserService : IUserService
         string? userType=null)
     {
         bool alreadyExists = await _db.Users
-            .AnyAsync(u => u.phone == phone);
+            .AnyAsync(user => user.phone == phone || user.userSubId == userSubId);
 
         if (alreadyExists)
         {
@@ -64,7 +65,23 @@ public class UserService : IUserService
             pendingInvitation.status = InvitationStatus.Accepted;
         }
 
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException exception) when (
+            exception.GetBaseException() is PostgresException postgresException
+            && postgresException.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            _db.Entry(newUser).State = EntityState.Detached;
+            if (pendingInvitation is not null)
+            {
+                _db.Entry(pendingInvitation).State = EntityState.Detached;
+            }
+
+            return null;
+        }
+
         await _registrationNotificationService.SendRegistrationSuccessfulSms(
             phone,
             newUser.name);

@@ -1,14 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 public class AgreementService : IAgreementService
 {
     public const int AcceptanceWindowHours = 48;
 
     private readonly AgreementsDbContext _db;
+    private readonly ILogger<AgreementService> _logger;
 
-    public AgreementService(AgreementsDbContext db)
+    public AgreementService(AgreementsDbContext db, ILogger<AgreementService> logger)
     {
         _db = db;
+        _logger = logger;
     }
     
     public async Task<AgreementCreationResult> CreateAgreement(
@@ -76,6 +79,11 @@ public class AgreementService : IAgreementService
             return new(AgreementCreationStatus.IdempotencyKeyConflict, null);
         }
 
+        _logger.LogInformation(
+            "Agreement {AgreementId} created by user {CreatedBy} with status {Status}.",
+            newAgreement.id,
+            createdBy,
+            newAgreement.status);
         return new(AgreementCreationStatus.Created, newAgreement);
     }
     public async Task<IReadOnlyList<Agreement>> GetAgreements(
@@ -203,6 +211,10 @@ public class AgreementService : IAgreementService
         await _db.SaveChangesAsync();
 
         await transaction.CommitAsync();
+        _logger.LogInformation(
+            "Agreement {AgreementId} accepted with {InstallmentCount} installments.",
+            agreement.id,
+            acceptedInstallments.Count);
         return AgreementAcceptanceResult.Accepted;
     }
 
@@ -237,6 +249,11 @@ public class AgreementService : IAgreementService
         installment.debtorPaidAt = debtorPaidAt;
 
         await _db.SaveChangesAsync();
+        _logger.LogInformation(
+            "Installment {InstallmentId} for agreement {AgreementId} marked paid by debtor {DebtorId}.",
+            installment.id,
+            agreement.id,
+            debtorId);
         return InstallmentPaymentResult.Paid;
     }
 
@@ -313,6 +330,11 @@ public class AgreementService : IAgreementService
         }
 
         await transaction.CommitAsync();
+        _logger.LogInformation(
+            "Payment for installment {InstallmentId} on agreement {AgreementId} confirmed by creditor {CreditorId}.",
+            installmentId,
+            agreement.id,
+            creditorId);
         return InstallmentPaymentConfirmationResult.Confirmed;
     }
 
@@ -360,6 +382,11 @@ public class AgreementService : IAgreementService
 
         if (updatedInstallments > 0)
         {
+            _logger.LogInformation(
+                "Installment {InstallmentId} for agreement {AgreementId} marked unpaid by debtor {DebtorId}.",
+                installmentId,
+                agreement.id,
+                debtorId);
             return InstallmentUnpaymentResult.Unpaid;
         }
 
