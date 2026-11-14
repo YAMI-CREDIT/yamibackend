@@ -1,11 +1,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Asp.Versioning;
+using Microsoft.Extensions.Logging.Console;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.Services.Configure<SimpleConsoleFormatterOptions>(options => options.IncludeScopes = true);
 
 // Setup paramemeters to verify jwt in cognito
 // Cognito config values are in appsettings.json. 
@@ -111,7 +115,8 @@ builder.Services.AddCors(options =>
         // ACTIVE: allow all origins (testing from local development).
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .WithExposedHeaders("X-Trace-Id");
 
         // LATER: restrict to the configured origins (https://yamicredit.com,
         // https://dev.yamicredit.com). Uncomment this block, comment out the
@@ -150,6 +155,57 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
+var requestLogger = loggerFactory.CreateLogger("Yami.Api.Requests");
+var exceptionLogger = loggerFactory.CreateLogger("Yami.Api.UnhandledExceptions");
+
+app.Use(async (context, next) =>
+{
+    var traceId = context.TraceIdentifier;
+    context.Response.Headers["X-Trace-Id"] = traceId;
+    using var scope = requestLogger.BeginScope(new Dictionary<string, object>
+    {
+        ["TraceId"] = traceId
+    });
+
+    var stopwatch = Stopwatch.StartNew();
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        stopwatch.Stop();
+        requestLogger.LogInformation(
+            "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMilliseconds} ms. TraceId: {TraceId}.",
+            context.Request.Method,
+            context.Request.Path,
+            context.Response.StatusCode,
+            stopwatch.ElapsedMilliseconds,
+            traceId);
+    }
+});
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+        exceptionLogger.LogError(
+            exception,
+            "Unhandled exception processing {Method} {Path}. TraceId: {TraceId}.",
+            context.Request.Method,
+            context.Request.Path,
+            context.TraceIdentifier);
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = "An unexpected error occurred.",
+            traceId = context.TraceIdentifier
+        });
+    });
+});
 
 // DEBUG: Shows the authorization header that was received
 

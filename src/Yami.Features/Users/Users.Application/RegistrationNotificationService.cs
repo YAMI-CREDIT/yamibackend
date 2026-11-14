@@ -16,7 +16,7 @@ public class RegistrationNotificationService : IRegistrationNotificationService
         _logger = logger;
     }
 
-    public async Task SendRegistrationSuccessfulSms(string phone, string userName)
+    public async Task SendRegistrationSuccessfulSms(Guid userId, string phone, string userName)
     {
         var firstName = GetFirstName(userName);
         var message =
@@ -34,11 +34,12 @@ public class RegistrationNotificationService : IRegistrationNotificationService
         {
             _logger.LogWarning(
                 exception,
-                "Failed to send registration confirmation SMS.");
+                "Failed to send registration confirmation SMS for user {UserId}.",
+                userId);
         }
     }
 
-    public async Task SendRegistrationSuccessfulEmail(string email, string userName)
+    public async Task SendRegistrationSuccessfulEmail(Guid userId, string email, string userName)
     {
         var encodedUserName = System.Net.WebUtility.HtmlEncode(userName);
         var htmlContent =
@@ -59,7 +60,8 @@ public class RegistrationNotificationService : IRegistrationNotificationService
         {
             _logger.LogWarning(
                 exception,
-                "Failed to send registration confirmation email.");
+                "Failed to send registration confirmation email for user {UserId}.",
+                userId);
         }
     }
 

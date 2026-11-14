@@ -37,7 +37,8 @@ public class AgreementNotificationService : IAgreementNotificationService
         {
             _logger.LogWarning(
                 exception,
-                "Failed to send agreement-created SMS.");
+                "Failed to send agreement-created SMS for agreement {AgreementId}.",
+                agreementId);
         }
     }
 
@@ -84,7 +85,8 @@ public class AgreementNotificationService : IAgreementNotificationService
         {
             _logger.LogWarning(
                 exception,
-                "Failed to send agreement-created email.");
+                "Failed to send agreement-created email for agreement {AgreementId}.",
+                agreementId);
         }
     }
 
@@ -138,7 +140,8 @@ public class AgreementNotificationService : IAgreementNotificationService
         {
             _logger.LogWarning(
                 exception,
-                "Failed to send agreement-accepted email.");
+                "Failed to send agreement-accepted email for agreement {AgreementId}.",
+                agreementId);
         }
     }
 
@@ -200,7 +203,11 @@ public class AgreementNotificationService : IAgreementNotificationService
         }
         catch (Exception exception)
         {
-            _logger.LogWarning(exception, "Failed to send installment-paid email.");
+            _logger.LogWarning(
+                exception,
+                "Failed to send installment-paid email for agreement {AgreementId}, installment {InstallmentId}.",
+                agreement.id,
+                installment.id);
         }
     }
 
@@ -266,7 +273,11 @@ public class AgreementNotificationService : IAgreementNotificationService
         }
         catch (Exception exception)
         {
-            _logger.LogWarning(exception, "Failed to send installment-payment-confirmed email.");
+            _logger.LogWarning(
+                exception,
+                "Failed to send installment-payment-confirmed email for agreement {AgreementId}, installment {InstallmentId}.",
+                agreement.id,
+                installment.id);
         }
     }
 }

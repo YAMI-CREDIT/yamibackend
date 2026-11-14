@@ -1,5 +1,5 @@
 public interface IRegistrationNotificationService
 {
-    Task SendRegistrationSuccessfulSms(string phone, string userName);
-    Task SendRegistrationSuccessfulEmail(string email, string userName);
+    Task SendRegistrationSuccessfulSms(Guid userId, string phone, string userName);
+    Task SendRegistrationSuccessfulEmail(Guid userId, string email, string userName);
 }
