@@ -146,7 +146,7 @@ public class AgreementService : IAgreementService
 
         var query = from installment in _db.Installments
                     join agreement in _db.Agreements on installment.agreementId equals agreement.id
-                    where agreement.status == AgreementStatus.Accepted
+                    where agreement.status == AgreementStatus.InProgress
                         && installment.dueDate >= today
                         && installment.dueDate <= end
                     select new { installment, agreement };
@@ -191,7 +191,7 @@ public class AgreementService : IAgreementService
         var updatedAgreements = await _db.Agreements
             .Where(item => item.id == agreement.id && item.status == AgreementStatus.Pending)
             .ExecuteUpdateAsync(update => update
-                .SetProperty(item => item.status, AgreementStatus.Accepted)
+                .SetProperty(item => item.status, AgreementStatus.InProgress)
                 .SetProperty(item => item.acceptedAt, acceptedAt)
                 .SetProperty(item => item.creditorConsent, agreement.creditorConsent)
                 .SetProperty(item => item.debtorConsent, agreement.debtorConsent)
@@ -204,7 +204,7 @@ public class AgreementService : IAgreementService
             return AgreementAcceptanceResult.NotPending;
         }
 
-        agreement.status = AgreementStatus.Accepted;
+        agreement.status = AgreementStatus.InProgress;
         agreement.acceptedAt = acceptedAt;
         _db.Entry(agreement).State = EntityState.Detached;
         _db.Installments.AddRange(acceptedInstallments);

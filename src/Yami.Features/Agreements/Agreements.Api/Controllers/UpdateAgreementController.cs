@@ -87,7 +87,7 @@ public class UpdateAgreementController : ControllerBase
             });
         }
 
-        if (agreement.status == AgreementStatus.Accepted)
+        if (agreement.status == AgreementStatus.InProgress)
         {
             return Conflict(new { error = "The agreement has already been accepted." });
         }
