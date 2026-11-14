@@ -67,6 +67,9 @@ namespace Agreements.EFInfrastructure.Data.Migrations
                     b.Property<DateOnly>("dueDate")
                         .HasColumnType("date");
 
+                    b.Property<Guid>("idempotencyKey")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("purpose")
                         .HasColumnType("text");
 
@@ -85,6 +88,9 @@ namespace Agreements.EFInfrastructure.Data.Migrations
 
                     b.HasKey("id");
 
+                    b.HasIndex("createdBy", "idempotencyKey")
+                        .IsUnique();
+
                     b.ToTable("Agreements");
                 });
 
@@ -102,6 +108,18 @@ namespace Agreements.EFInfrastructure.Data.Migrations
 
                     b.Property<decimal>("amountDue")
                         .HasColumnType("numeric");
+
+                    b.Property<bool>("creditorConfirmedPayment")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("creditorConfirmedPaymentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("debtorPaid")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("debtorPaidAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateOnly>("dueDate")
                         .HasColumnType("date");

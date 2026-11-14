@@ -40,7 +40,6 @@ public class GetInstallmentsController : ControllerBase
     [HttpGet("{installmentId:guid}")]
     [Authorize]
     [ProducesResponseType(typeof(Installment), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetInstallment(Guid installmentId)
     {
         var sub = User.FindFirst("sub")?.Value;
