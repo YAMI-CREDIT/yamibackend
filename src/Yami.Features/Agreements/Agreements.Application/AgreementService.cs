@@ -218,6 +218,25 @@ public class AgreementService : IAgreementService
         return AgreementAcceptanceResult.Accepted;
     }
 
+    public async Task<AgreementRejectionResult> RejectAgreement(Guid agreementId, Guid rejectedBy)
+    {
+        var updatedAgreements = await _db.Agreements
+            .Where(item => item.id == agreementId && item.status == AgreementStatus.Pending)
+            .ExecuteUpdateAsync(update => update
+                .SetProperty(item => item.status, AgreementStatus.Rejected));
+
+        if (updatedAgreements == 0)
+        {
+            return AgreementRejectionResult.NotPending;
+        }
+
+        _logger.LogInformation(
+            "Agreement {AgreementId} rejected by user {RejectedBy}.",
+            agreementId,
+            rejectedBy);
+        return AgreementRejectionResult.Rejected;
+    }
+
     public async Task<InstallmentPaymentResult> PayInstallment(Guid installmentId, Guid debtorId)
     {
         var installment = await _db.Installments
@@ -320,9 +339,20 @@ public class AgreementService : IAgreementService
 
         var updatedAgreements = await _db.Agreements
             .Where(item => item.id == agreement.id)
-            .ExecuteUpdateAsync(update => update.SetProperty(
-                item => item.amountPaid,
-                item => (item.amountPaid ?? 0m) + installment.amountDue));
+            .ExecuteUpdateAsync(update => update
+                .SetProperty(
+                    item => item.amountPaid,
+                    item => (item.amountPaid ?? 0m) + installment.amountDue)
+                .SetProperty(
+                    item => item.status,
+                    item => (item.amountPaid ?? 0m) + installment.amountDue == item.amountTotal
+                        ? AgreementStatus.Settled
+                        : item.status)
+                .SetProperty(
+                    item => item.settledAt,
+                    item => (item.amountPaid ?? 0m) + installment.amountDue == item.amountTotal
+                        ? confirmedAt
+                        : item.settledAt));
         if (updatedAgreements == 0)
         {
             await transaction.RollbackAsync();

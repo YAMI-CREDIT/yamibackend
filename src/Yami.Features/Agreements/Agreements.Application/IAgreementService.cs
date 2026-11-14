@@ -6,6 +6,12 @@ public enum AgreementAcceptanceResult
     NotPending
 }
 
+public enum AgreementRejectionResult
+{
+    Rejected,
+    NotPending
+}
+
 public enum AgreementCreationStatus
 {
     Created,
@@ -69,6 +75,7 @@ public interface IAgreementService
     Task<IReadOnlyList<UpcomingInstallment>> GetUpcomingInstallmentsOwed(Guid userId, int days);
     Task<IReadOnlyList<UpcomingInstallment>> GetUpcomingInstallmentsExpected(Guid userId, int days);
     Task<AgreementAcceptanceResult> AcceptAgreement(Agreement agreement);
+    Task<AgreementRejectionResult> RejectAgreement(Guid agreementId, Guid rejectedBy);
     Task<InstallmentPaymentResult> PayInstallment(Guid installmentId, Guid debtorId);
     Task<InstallmentPaymentConfirmationResult> ConfirmInstallmentPayment(Guid installmentId, Guid creditorId);
     Task<InstallmentUnpaymentResult> UnpayInstallment(Guid installmentId, Guid debtorId);

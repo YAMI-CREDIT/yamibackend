@@ -25,7 +25,7 @@ public class UpdateAgreementController : ControllerBase
     [HttpPost("accept")]
     [Authorize]
     [ProducesResponseType(typeof(AcceptAgreementResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> AcceptAgreement([FromBody] AcceptAgreementRequest request)
+    public async Task<IActionResult> AcceptAgreement([FromBody] UpdateAgreementStatusRequest request)
     {
         var sub = User.FindFirst("sub")?.Value;
 
@@ -197,5 +197,73 @@ public class UpdateAgreementController : ControllerBase
                 })
                 .ToList()
         });
+    }
+
+    [HttpPost("reject")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RejectAgreement([FromBody] UpdateAgreementStatusRequest request)
+    {
+        var sub = User.FindFirst("sub")?.Value;
+        if (string.IsNullOrWhiteSpace(sub))
+        {
+            return Unauthorized(new { error = "sub cannot be empty. Unable to verify the auth claim." });
+        }
+
+        var user = await _userService.GetUserBySub(sub);
+        if (user is null)
+        {
+            return Unauthorized(new { error = "The sub claim presented does not exist in the system." });
+        }
+
+        if (request.agreementId == Guid.Empty)
+        {
+            return BadRequest(new { error = "agreementId is required." });
+        }
+
+        var agreements = await _agreementService.GetAgreements(id: request.agreementId);
+        var agreement = agreements.FirstOrDefault();
+        if (agreement is null)
+        {
+            return NotFound(new { error = "Agreement not found." });
+        }
+
+        if (agreement.creditorId != user.id && agreement.debtorId != user.id)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                error = "The authenticated user is not a party to this agreement."
+            });
+        }
+
+        if (agreement.createdBy == user.id)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                code = "creator_cannot_reject",
+                error = "The agreement creator cannot reject the agreement."
+            });
+        }
+
+        if (agreement.status != AgreementStatus.Pending)
+        {
+            return Conflict(new
+            {
+                code = "agreement_not_pending",
+                error = "Only a pending agreement can be rejected."
+            });
+        }
+
+        var rejectionResult = await _agreementService.RejectAgreement(agreement.id, user.id);
+        if (rejectionResult == AgreementRejectionResult.NotPending)
+        {
+            return Conflict(new
+            {
+                code = "agreement_not_pending",
+                error = "Only a pending agreement can be rejected."
+            });
+        }
+
+        return NoContent();
     }
 }
