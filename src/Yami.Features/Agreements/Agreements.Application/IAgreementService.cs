@@ -2,7 +2,8 @@ public enum AgreementAcceptanceResult
 {
     Accepted,
     DeadlinePassed,
-    InstallmentsUnavailable
+    InstallmentsUnavailable,
+    NotPending
 }
 
 public enum InstallmentPaymentResult
@@ -21,6 +22,16 @@ public enum InstallmentPaymentConfirmationResult
     AgreementNotFound,
     NotCreditor,
     InstallmentNotPaid,
+    AlreadyConfirmed
+}
+
+public enum InstallmentUnpaymentResult
+{
+    Unpaid,
+    InstallmentNotFound,
+    AgreementNotFound,
+    NotDebtor,
+    AlreadyUnpaid,
     AlreadyConfirmed
 }
 
@@ -48,4 +59,5 @@ public interface IAgreementService
     Task<AgreementAcceptanceResult> AcceptAgreement(Agreement agreement);
     Task<InstallmentPaymentResult> PayInstallment(Guid installmentId, Guid debtorId);
     Task<InstallmentPaymentConfirmationResult> ConfirmInstallmentPayment(Guid installmentId, Guid creditorId);
+    Task<InstallmentUnpaymentResult> UnpayInstallment(Guid installmentId, Guid debtorId);
 }

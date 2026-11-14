@@ -117,6 +117,55 @@ public class UpdateInstallmentsController : ControllerBase
         };
     }
 
+    [HttpPost("unpay")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> UnpayInstallment([FromBody] InstallmentPaymentRequest request)
+    {
+        var sub = User.FindFirst("sub")?.Value;
+        if (string.IsNullOrWhiteSpace(sub))
+        {
+            return Unauthorized(new { error = "sub cannot be empty. Unable to verify the auth claim." });
+        }
+
+        var user = await _userService.GetUserBySub(sub);
+        if (user is null)
+        {
+            return NotFound(new { error = "No user record found for the authenticated claim." });
+        }
+
+        if (user.userSubId != sub)
+        {
+            return Unauthorized(new { error = "The authenticated user does not match the record." });
+        }
+
+        if (request.installmentId == Guid.Empty)
+        {
+            return BadRequest(new { error = "installmentId is required." });
+        }
+
+        var result = await _agreementService.UnpayInstallment(request.installmentId, user.id);
+        return result switch
+        {
+            InstallmentUnpaymentResult.Unpaid => NoContent(),
+            InstallmentUnpaymentResult.InstallmentNotFound => NotFound(new { error = "Installment not found." }),
+            InstallmentUnpaymentResult.AgreementNotFound => NotFound(new { error = "Agreement not found." }),
+            InstallmentUnpaymentResult.NotDebtor => StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                error = "Only the debtor can mark this installment as unpaid."
+            }),
+            InstallmentUnpaymentResult.AlreadyUnpaid => Conflict(new
+            {
+                error = "This installment has not been marked as paid."
+            }),
+            InstallmentUnpaymentResult.AlreadyConfirmed => Conflict(new
+            {
+                error = "This payment has already been confirmed by the creditor."
+            }),
+            _ => throw new ArgumentOutOfRangeException(nameof(result), result, "Unknown installment unpayment result.")
+        };
+    }
+
     [HttpPost("confirm-payment")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

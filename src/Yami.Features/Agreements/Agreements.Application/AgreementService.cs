@@ -147,16 +147,35 @@ public class AgreementService : IAgreementService
             return AgreementAcceptanceResult.InstallmentsUnavailable;
         }
 
-        agreement.status = AgreementStatus.Accepted;
-        agreement.acceptedAt = acceptedAt;
         foreach (var installment in acceptedInstallments)
         {
             installment.acceptedAt = acceptedAt;
         }
 
+        await using var transaction = await _db.Database.BeginTransactionAsync();
+        var updatedAgreements = await _db.Agreements
+            .Where(item => item.id == agreement.id && item.status == AgreementStatus.Pending)
+            .ExecuteUpdateAsync(update => update
+                .SetProperty(item => item.status, AgreementStatus.Accepted)
+                .SetProperty(item => item.acceptedAt, acceptedAt)
+                .SetProperty(item => item.creditorConsent, agreement.creditorConsent)
+                .SetProperty(item => item.debtorConsent, agreement.debtorConsent)
+                .SetProperty(item => item.creditorName, agreement.creditorName)
+                .SetProperty(item => item.debtorName, agreement.debtorName));
+
+        if (updatedAgreements == 0)
+        {
+            await transaction.RollbackAsync();
+            return AgreementAcceptanceResult.NotPending;
+        }
+
+        agreement.status = AgreementStatus.Accepted;
+        agreement.acceptedAt = acceptedAt;
+        _db.Entry(agreement).State = EntityState.Detached;
         _db.Installments.AddRange(acceptedInstallments);
-        _db.Agreements.Update(agreement);
         await _db.SaveChangesAsync();
+
+        await transaction.CommitAsync();
         return AgreementAcceptanceResult.Accepted;
     }
 
@@ -198,6 +217,7 @@ public class AgreementService : IAgreementService
         Guid installmentId, Guid creditorId)
     {
         var installment = await _db.Installments
+            .AsNoTracking()
             .FirstOrDefaultAsync(item => item.id == installmentId);
         if (installment is null)
         {
@@ -205,6 +225,7 @@ public class AgreementService : IAgreementService
         }
 
         var agreement = await _db.Agreements
+            .AsNoTracking()
             .FirstOrDefaultAsync(item => item.id == installment.agreementId);
         if (agreement is null)
         {
@@ -226,11 +247,105 @@ public class AgreementService : IAgreementService
             return InstallmentPaymentConfirmationResult.InstallmentNotPaid;
         }
 
-        installment.creditorConfirmedPayment = true;
-        installment.creditorConfirmedPaymentAt = DateTime.UtcNow;
-        agreement.amountPaid = (agreement.amountPaid ?? 0m) + installment.amountDue;
+        var confirmedAt = DateTime.UtcNow;
+        await using var transaction = await _db.Database.BeginTransactionAsync();
+        var updatedInstallments = await _db.Installments
+            .Where(item => item.id == installmentId
+                && item.agreementId == agreement.id
+                && item.debtorPaid
+                && !item.creditorConfirmedPayment)
+            .ExecuteUpdateAsync(update => update
+                .SetProperty(item => item.creditorConfirmedPayment, true)
+                .SetProperty(item => item.creditorConfirmedPaymentAt, confirmedAt));
 
-        await _db.SaveChangesAsync();
+        if (updatedInstallments == 0)
+        {
+            await transaction.RollbackAsync();
+            var currentInstallment = await _db.Installments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(item => item.id == installmentId);
+            if (currentInstallment is null)
+            {
+                return InstallmentPaymentConfirmationResult.InstallmentNotFound;
+            }
+
+            return currentInstallment.creditorConfirmedPayment
+                ? InstallmentPaymentConfirmationResult.AlreadyConfirmed
+                : InstallmentPaymentConfirmationResult.InstallmentNotPaid;
+        }
+
+        var updatedAgreements = await _db.Agreements
+            .Where(item => item.id == agreement.id)
+            .ExecuteUpdateAsync(update => update.SetProperty(
+                item => item.amountPaid,
+                item => (item.amountPaid ?? 0m) + installment.amountDue));
+        if (updatedAgreements == 0)
+        {
+            await transaction.RollbackAsync();
+            return InstallmentPaymentConfirmationResult.AgreementNotFound;
+        }
+
+        await transaction.CommitAsync();
         return InstallmentPaymentConfirmationResult.Confirmed;
+    }
+
+    public async Task<InstallmentUnpaymentResult> UnpayInstallment(Guid installmentId, Guid debtorId)
+    {
+        var installment = await _db.Installments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.id == installmentId);
+        if (installment is null)
+        {
+            return InstallmentUnpaymentResult.InstallmentNotFound;
+        }
+
+        var agreement = await _db.Agreements
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.id == installment.agreementId);
+        if (agreement is null)
+        {
+            return InstallmentUnpaymentResult.AgreementNotFound;
+        }
+
+        if (agreement.debtorId != debtorId)
+        {
+            return InstallmentUnpaymentResult.NotDebtor;
+        }
+
+        if (installment.creditorConfirmedPayment)
+        {
+            return InstallmentUnpaymentResult.AlreadyConfirmed;
+        }
+
+        if (!installment.debtorPaid)
+        {
+            return InstallmentUnpaymentResult.AlreadyUnpaid;
+        }
+
+        var updatedInstallments = await _db.Installments
+            .Where(item => item.id == installmentId
+                && item.agreementId == agreement.id
+                && item.debtorPaid
+                && !item.creditorConfirmedPayment)
+            .ExecuteUpdateAsync(update => update
+                .SetProperty(item => item.debtorPaid, false)
+                .SetProperty(item => item.debtorPaidAt, (DateTime?)null));
+
+        if (updatedInstallments > 0)
+        {
+            return InstallmentUnpaymentResult.Unpaid;
+        }
+
+        var currentInstallment = await _db.Installments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.id == installmentId);
+        if (currentInstallment is null)
+        {
+            return InstallmentUnpaymentResult.InstallmentNotFound;
+        }
+
+        return currentInstallment.creditorConfirmedPayment
+            ? InstallmentUnpaymentResult.AlreadyConfirmed
+            : InstallmentUnpaymentResult.AlreadyUnpaid;
     }
 }

@@ -128,6 +128,15 @@ public class UpdateAgreementController : ControllerBase
             });
         }
 
+        if (acceptanceResult == AgreementAcceptanceResult.NotPending)
+        {
+            return Conflict(new
+            {
+                code = "agreement_not_pending",
+                error = "The agreement is no longer pending acceptance."
+            });
+        }
+
         var agreementId = agreement.id;
         var agreementTitle = agreement.title;
         var acceptedAt = agreement.acceptedAt!.Value;
