@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 public enum AgreementStatus
 {
     Accepted,   // Accepted by the other party
@@ -19,6 +21,8 @@ public enum RepaymentPlan
 public class Agreement
 {
     public Guid id { get; set; }
+    [JsonIgnore]
+    public Guid idempotencyKey { get; set; }
     public Guid creditorId { get; set; }
     public string? creditorName { get; set; }
     public Guid debtorId { get; set; }

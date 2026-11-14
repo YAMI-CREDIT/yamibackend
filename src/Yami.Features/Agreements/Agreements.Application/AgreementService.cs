@@ -11,21 +11,31 @@ public class AgreementService : IAgreementService
         _db = db;
     }
     
-    public async Task<Agreement?> CreateAgreement(
+    public async Task<AgreementCreationResult> CreateAgreement(
         Guid creditorId, string? creditorName, Guid debtorId,
         string? debtorName, bool creditorConsent, bool debtorConsent, string? purpose,
         string title, decimal amountTotal, decimal? amountPaid, string currency,
         DateOnly dueDate, Guid createdBy, AgreementStatus status,
-        DateTime? acceptedAt, DateTime? settledAt, RepaymentPlan repaymentPlan)
+        DateTime? acceptedAt, DateTime? settledAt, RepaymentPlan repaymentPlan,
+        Guid idempotencyKey)
     {
         if (!Enum.IsDefined(repaymentPlan))
         {
-            return null;
+            return new(AgreementCreationStatus.InvalidRepaymentPlan, null);
+        }
+
+        var existingKey = await _db.Agreements
+            .FirstOrDefaultAsync(item => item.createdBy == createdBy
+                && item.idempotencyKey == idempotencyKey);
+        if (existingKey is not null)
+        {
+            return new(AgreementCreationStatus.IdempotencyKeyConflict, null);
         }
 
         var newAgreement = new Agreement
         {
             id = Guid.NewGuid(),
+            idempotencyKey = idempotencyKey,
             creditorId = creditorId,
             creditorName = creditorName,
             debtorId = debtorId,
@@ -47,9 +57,26 @@ public class AgreementService : IAgreementService
         };
 
         _db.Agreements.Add(newAgreement);
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            _db.Entry(newAgreement).State = EntityState.Detached;
+            var concurrentAgreement = await _db.Agreements
+                .AsNoTracking()
+                .FirstOrDefaultAsync(item => item.createdBy == createdBy
+                    && item.idempotencyKey == idempotencyKey);
+            if (concurrentAgreement is null)
+            {
+                throw;
+            }
 
-        return newAgreement;
+            return new(AgreementCreationStatus.IdempotencyKeyConflict, null);
+        }
+
+        return new(AgreementCreationStatus.Created, newAgreement);
     }
     public async Task<IReadOnlyList<Agreement>> GetAgreements(
         Guid? id = null, Guid? creditorId = null, Guid? debtorId = null)

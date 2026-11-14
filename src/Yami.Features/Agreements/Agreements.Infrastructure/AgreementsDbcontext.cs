@@ -9,6 +9,10 @@ public class AgreementsDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Agreement>()
+            .HasIndex(agreement => new { agreement.createdBy, agreement.idempotencyKey })
+            .IsUnique();
+
         modelBuilder.Entity<Installment>()
             .HasOne<Agreement>()
             .WithMany()

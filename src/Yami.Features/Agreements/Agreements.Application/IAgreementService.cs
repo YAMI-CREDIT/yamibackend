@@ -6,6 +6,17 @@ public enum AgreementAcceptanceResult
     NotPending
 }
 
+public enum AgreementCreationStatus
+{
+    Created,
+    IdempotencyKeyConflict,
+    InvalidRepaymentPlan
+}
+
+public sealed record AgreementCreationResult(
+    AgreementCreationStatus Status,
+    Agreement? Agreement);
+
 public enum InstallmentPaymentResult
 {
     Paid,
@@ -44,12 +55,13 @@ public sealed record UpcomingInstallment(
 
 public interface IAgreementService
 {
-    Task<Agreement?> CreateAgreement(
+    Task<AgreementCreationResult> CreateAgreement(
         Guid creditorId, string? creditorName, Guid debtorId,
         string? debtorName, bool creditorConsent, bool debtorConsent, string? purpose,
         string title, decimal amountTotal, decimal? amountPaid, string currency,
         DateOnly dueDate, Guid createdBy, AgreementStatus status,
-        DateTime? acceptedAt, DateTime? settledAt, RepaymentPlan repaymentPlan);
+        DateTime? acceptedAt, DateTime? settledAt, RepaymentPlan repaymentPlan,
+        Guid idempotencyKey);
     Task<IReadOnlyList<Agreement>> GetAgreements(
         Guid? id = null, Guid? creditorId = null, Guid? debtorId = null);
     Task<Installment?> GetInstallment(Guid installmentId);
