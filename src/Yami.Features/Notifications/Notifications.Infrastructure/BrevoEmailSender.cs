@@ -10,6 +10,7 @@ public class EmailOptions
     public string Endpoint { get; set; } = "https://api.brevo.com/v3/smtp/email";
     public string SenderName { get; set; } = "Yami Credit";
     public string SenderEmail { get; set; } = "yamicredit@gmail.com";
+    public string AdminEmail { get; set; } = string.Empty;
 }
 
 public class BrevoEmailSender : IEmailSender
@@ -28,7 +29,14 @@ public class BrevoEmailSender : IEmailSender
         _logger = logger;
     }
 
-    public async Task SendEmail(string email, string subject, string htmlContent)
+    public Task SendEmail(string email, string subject, string htmlContent)
+        => SendEmailWithAttachment(email, subject, htmlContent, Array.Empty<Attachment>());
+
+    public async Task SendEmailWithAttachment(
+        string email,
+        string subject,
+        string htmlContent,
+        IEnumerable<Attachment> attachments)
     {
         if (string.IsNullOrWhiteSpace(_options.ApiKey))
         {
@@ -41,7 +49,15 @@ public class BrevoEmailSender : IEmailSender
         request.Headers.TryAddWithoutValidation("api-key", _options.ApiKey);
         var sender = new { name = _options.SenderName, email = _options.SenderEmail };
         var recipients = new[] { new { email } };
-        var payload = new { sender, to = recipients, subject, htmlContent };
+        var attachmentPayload = attachments
+            .Select(attachment => new
+            {
+                name = attachment.Filename,
+                content = Convert.ToBase64String(attachment.Content),
+                contentType = attachment.ContentType,
+            })
+            .ToArray();
+        var payload = new { sender, to = recipients, subject, htmlContent, attachment = attachmentPayload };
 
         request.Content = JsonContent.Create(payload);
 

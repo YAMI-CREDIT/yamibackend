@@ -1,5 +1,7 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 public class OverdueInstallmentService : IOverdueInstallmentService
 {
@@ -7,6 +9,7 @@ public class OverdueInstallmentService : IOverdueInstallmentService
     private readonly UsersDbContext _usersDb;
     private readonly ISmsSender _smsSender;
     private readonly IEmailSender _emailSender;
+    private readonly IOptions<EmailOptions> _emailOptions;
     private readonly ILogger<OverdueInstallmentService> _logger;
 
     public OverdueInstallmentService(
@@ -14,12 +17,14 @@ public class OverdueInstallmentService : IOverdueInstallmentService
         UsersDbContext usersDb,
         ISmsSender smsSender,
         IEmailSender emailSender,
+        IOptions<EmailOptions> emailOptions,
         ILogger<OverdueInstallmentService> logger)
     {
         _agreementsDb = agreementsDb;
         _usersDb = usersDb;
         _smsSender = smsSender;
         _emailSender = emailSender;
+        _emailOptions = emailOptions;
         _logger = logger;
     }
 
@@ -79,11 +84,90 @@ public class OverdueInstallmentService : IOverdueInstallmentService
             await NotifyDebtor(item.agreement, item.installment, daysOverdue, cancellationToken);
         }
 
+        var csv = new StringBuilder();
+        csv.AppendLine("AgreementId,Title,DebtorId,DebtorName,DueDate,AmountDue,Currency,DaysOverdue");
+        foreach (var item in overdue)
+        {
+            var daysOverdue = (today.ToDateTime(TimeOnly.MinValue)
+                - item.installment.dueDate.ToDateTime(TimeOnly.MinValue)).Days;
+            csv.AppendLine(string.Join(',',
+                item.agreement.id,
+                CsvField(item.agreement.title),
+                item.agreement.debtorId,
+                CsvField(item.agreement.debtorName ?? string.Empty),
+                item.installment.dueDate.ToString("yyyy-MM-dd"),
+                item.installment.amountDue.ToString("0.00"),
+                CsvField(item.agreement.currency),
+                daysOverdue));
+        }
+
+        await SendAdminReport(
+            Encoding.UTF8.GetBytes(csv.ToString()),
+            $"overdue-installments-{today:yyyy-MM-dd}.csv",
+            overdue.Count,
+            totalOutstanding,
+            overdue.Select(item => item.agreement.id).Distinct().Count(),
+            today,
+            cancellationToken);
+
         _logger.LogInformation(
             "Overdue installments job complete: {Count} installment(s) processed.",
             overdue.Count);
 
         return overdue.Count;
+    }
+
+    private async Task SendAdminReport(
+        byte[] csvBytes,
+        string fileName,
+        int count,
+        decimal totalOutstanding,
+        int agreementCount,
+        DateOnly today,
+        CancellationToken cancellationToken)
+    {
+        var adminEmail = _emailOptions.Value.AdminEmail;
+        if (string.IsNullOrWhiteSpace(adminEmail))
+        {
+            _logger.LogWarning(
+                "No admin email configured (Email:AdminEmail); skipping overdue-installment report.");
+            return;
+        }
+
+        var htmlContent =
+            "<p>Good day,</p>" +
+            $"<p>As of {today:yyyy-MM-dd}, there are <strong>{count}</strong> overdue installment(s) " +
+            $"totalling <strong>{totalOutstanding:0.00}</strong> across <strong>{agreementCount}</strong> agreement(s).</p>" +
+            "<p>The full report is attached as a CSV file.</p>" +
+            "<p>Thank you,<br>Yami Credit</p>";
+
+        try
+        {
+            await _emailSender.SendEmailWithAttachment(
+                adminEmail,
+                $"Overdue installments report - {today:yyyy-MM-dd} ({count} item(s))",
+                htmlContent,
+                new[] { new Attachment(fileName, csvBytes, "text/csv") });
+
+            _logger.LogInformation(
+                "Sent overdue-installment report to the admin email ({Count} item(s)).",
+                count);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Failed to send overdue-installment report to the admin email.");
+        }
+    }
+
+    private static string CsvField(string value)
+    {
+        if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
+        {
+            return "\"" + value.Replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 
     private async Task NotifyDebtor(

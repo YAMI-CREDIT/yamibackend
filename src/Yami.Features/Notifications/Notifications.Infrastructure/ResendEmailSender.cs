@@ -18,7 +18,14 @@ public class ResendEmailSender : IEmailSender
         _logger = logger;
     }
 
-    public async Task SendEmail(string email, string subject, string htmlContent)
+    public Task SendEmail(string email, string subject, string htmlContent)
+        => SendEmailWithAttachment(email, subject, htmlContent, Array.Empty<Attachment>());
+
+    public async Task SendEmailWithAttachment(
+        string email,
+        string subject,
+        string htmlContent,
+        IEnumerable<Attachment> attachments)
     {
         try
         {
@@ -35,6 +42,17 @@ public class ResendEmailSender : IEmailSender
                 HtmlBody = htmlContent,
             };
             message.To.Add(email);
+            message.Attachments ??= new List<Resend.EmailAttachment>();
+
+            foreach (var attachment in attachments)
+            {
+                message.Attachments.Add(new Resend.EmailAttachment
+                {
+                    Filename = attachment.Filename,
+                    ContentType = attachment.ContentType,
+                    Content = new Resend.ByteArrayOrString(attachment.Content),
+                });
+            }
 
             var response = await _resend.EmailSendAsync(message);
             _logger.LogInformation(
