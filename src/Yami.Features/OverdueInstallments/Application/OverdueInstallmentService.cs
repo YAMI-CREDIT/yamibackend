@@ -50,7 +50,7 @@ public class OverdueInstallmentService : IOverdueInstallmentService
         {
             _logger.LogInformation(
                 "No overdue installments found as of {Today}.",
-                today.ToString("yyyy-MM-dd"));
+                DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
             return 0;
         }
 
