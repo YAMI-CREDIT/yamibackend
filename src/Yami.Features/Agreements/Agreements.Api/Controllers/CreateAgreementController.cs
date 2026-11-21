@@ -28,7 +28,9 @@ public class CreateAgreementController : ControllerBase
     [HttpPost]
     [Authorize]         // Ensures the authorization middleware has run before the rest of the code continues
     [ProducesResponseType(typeof(CreateAgreementResponse), StatusCodes.Status201Created)]
-    public async Task<IActionResult> CreateAgreement([FromBody] CreateAgreementRequest request)
+    public async Task<IActionResult> CreateAgreement(
+        [FromBody] CreateAgreementRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string idempotencyKeyHeader)
     {
         // These come from the verified ID token's claims, not from the request body.
         var sub = User.FindFirst("sub")?.Value;
@@ -36,6 +38,12 @@ public class CreateAgreementController : ControllerBase
         if (sub is null)
         {
             return Unauthorized(new { error = "sub cannot be empty. Unable to verify the auth claim." });
+        }
+
+        if (!Guid.TryParse(idempotencyKeyHeader, out var idempotencyKey)
+            || idempotencyKey == Guid.Empty)
+        {
+            return BadRequest(new { error = "A non-empty UUID Idempotency-Key header is required." });
         }
 
         // get the creator's record from the sub claim
@@ -128,72 +136,81 @@ public class CreateAgreementController : ControllerBase
             status: AgreementStatus.Pending,
             acceptedAt: null,
             settledAt: null,
-            repaymentPlan: request.repaymentPlan);
+            repaymentPlan: request.repaymentPlan,
+            idempotencyKey: idempotencyKey);
 
-        if (creationResult is null)
+        if (creationResult.Status == AgreementCreationStatus.IdempotencyKeyConflict)
+        {
+            return Conflict(new { error = "Idempotency-Key has already been used to create an agreement." });
+        }
+
+        var newAgreement = creationResult.Agreement;
+        if (newAgreement is null)
         {
             return Conflict(new { error = "The agreement could not be created." });
         }
 
-        var newAgreement = creationResult.agreement;
-        var recipient = creator.id == creditor.id ? debtor : creditor;
-        await _agreementNotificationService.SendAgreementCreatedSms(
-            recipient.phone,
-            newAgreement.id,
-            recipient.name);
-
-        if (!string.IsNullOrWhiteSpace(recipient.email))
+        if (creationResult.Status == AgreementCreationStatus.Created)
         {
-            await _agreementNotificationService.SendAgreementCreatedEmail(
-                recipient.email,
-                recipient.name,
+            var acceptBy = newAgreement.createdAt.AddHours(AgreementService.AcceptanceWindowHours);
+            var recipient = creator.id == creditor.id ? debtor : creditor;
+            await _agreementNotificationService.SendAgreementCreatedSms(
+                recipient.phone,
                 newAgreement.id,
-                newAgreement.title,
-                creationResult.installments,
-                newAgreement.currency,
-                creator.name,
-                creditor.phone,
-                creditor.name,
-                debtor.phone,
-                debtor.name);
-        }
+                recipient.name);
 
-        if (!string.IsNullOrWhiteSpace(creator.email))
-        {
-            await _agreementNotificationService.SendAgreementCreatedEmail(
-                creator.email,
-                creator.name,
-                newAgreement.id,
-                newAgreement.title,
-                creationResult.installments,
-                newAgreement.currency,
-                creator.name,
-                creditor.phone,
-                creditor.name,
-                debtor.phone,
-                debtor.name);
+            if (!string.IsNullOrWhiteSpace(recipient.email))
+            {
+                await _agreementNotificationService.SendAgreementCreatedEmail(
+                    recipient.email,
+                    recipient.name,
+                    newAgreement.id,
+                    newAgreement.title,
+                    creator.name,
+                    creditor.phone,
+                    creditor.name,
+                    debtor.phone,
+                    debtor.name,
+                    acceptBy);
             }
+
+            if (!string.IsNullOrWhiteSpace(creator.email))
+            {
+                await _agreementNotificationService.SendAgreementCreatedEmail(
+                    creator.email,
+                    creator.name,
+                    newAgreement.id,
+                    newAgreement.title,
+                    creator.name,
+                    creditor.phone,
+                    creditor.name,
+                    debtor.phone,
+                    debtor.name,
+                    acceptBy);
+            }
+        }
 
         return StatusCode(201, new CreateAgreementResponse
         {
             agreementCreated = true,
             agreementId = newAgreement.id,
-            currency = newAgreement.currency,
-            installments = creationResult.installments
-                .Select(installment => new CreateAgreementInstallmentResponse
-                {
-                    dueDate = installment.dueDate,
-                    amountDue = installment.amountDue
-                })
-                .ToList()
+            currency = newAgreement.currency
         });
     }
 
     [HttpPost("invite-debtor")]
     [Authorize]
     [ProducesResponseType(typeof(CreateAgreementResponse), StatusCodes.Status201Created)]
-    public async Task<IActionResult> InviteDebtor([FromBody] CreateAgreementInviteDebtorRequest request)
+    public async Task<IActionResult> InviteDebtor(
+        [FromBody] CreateAgreementInviteDebtorRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string idempotencyKeyHeader)
     {
+        if (!Guid.TryParse(idempotencyKeyHeader, out var idempotencyKey)
+            || idempotencyKey == Guid.Empty)
+        {
+            return BadRequest(new { error = "A non-empty UUID Idempotency-Key header is required." });
+        }
+
         return await CreateAgreementWithInvitation(
             request.debtorPhone,
             request.purpose,
@@ -201,14 +218,23 @@ public class CreateAgreementController : ControllerBase
             request.amountTotal,
             request.dueDate,
             request.repaymentPlan,
+            idempotencyKey,
             isInvitingDebtor: true);
     }
 
     [HttpPost("invite-creditor")]
     [Authorize]
     [ProducesResponseType(typeof(CreateAgreementResponse), StatusCodes.Status201Created)]
-    public async Task<IActionResult> InviteCreditor([FromBody] CreateAgreementInviteCreditorRequest request)
+    public async Task<IActionResult> InviteCreditor(
+        [FromBody] CreateAgreementInviteCreditorRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string idempotencyKeyHeader)
     {
+        if (!Guid.TryParse(idempotencyKeyHeader, out var idempotencyKey)
+            || idempotencyKey == Guid.Empty)
+        {
+            return BadRequest(new { error = "A non-empty UUID Idempotency-Key header is required." });
+        }
+
         return await CreateAgreementWithInvitation(
             request.creditorPhone,
             request.purpose,
@@ -216,6 +242,7 @@ public class CreateAgreementController : ControllerBase
             request.amountTotal,
             request.dueDate,
             request.repaymentPlan,
+            idempotencyKey,
             isInvitingDebtor: false);
     }
 
@@ -226,6 +253,7 @@ public class CreateAgreementController : ControllerBase
         decimal amountTotal,
         DateOnly dueDate,
         RepaymentPlan repaymentPlan,
+        Guid idempotencyKey,
         bool isInvitingDebtor)
     {
         var sub = User.FindFirst("sub")?.Value;
@@ -312,14 +340,20 @@ public class CreateAgreementController : ControllerBase
             status: AgreementStatus.Pending,
             acceptedAt: null,
             settledAt: null,
-            repaymentPlan: repaymentPlan);
+            repaymentPlan: repaymentPlan,
+            idempotencyKey: idempotencyKey);
 
-        if (creationResult is null)
+        if (creationResult.Status == AgreementCreationStatus.IdempotencyKeyConflict)
+        {
+            return Conflict(new { error = "Idempotency-Key has already been used to create an agreement." });
+        }
+
+        var newAgreement = creationResult.Agreement;
+        if (newAgreement is null)
         {
             return Conflict(new { error = "The agreement could not be created." });
         }
 
-        var newAgreement = creationResult.agreement;
         var invitation = await _userService.InviteToAgreement(
             counterpartyPhone,
             newAgreement.id,
@@ -335,14 +369,8 @@ public class CreateAgreementController : ControllerBase
         {
             agreementCreated = true,
             agreementId = newAgreement.id,
-            currency = newAgreement.currency,
-            installments = creationResult.installments
-                .Select(installment => new CreateAgreementInstallmentResponse
-                {
-                    dueDate = installment.dueDate,
-                    amountDue = installment.amountDue
-                })
-                .ToList()
+            currency = newAgreement.currency
             });
     }
+
 }

@@ -60,7 +60,7 @@ nunit-*.xml
 setup_and_run.md
 bin/
 obj/
-notes.cs
+notes.*
 publish
 .DS_Store
 tokens.json

@@ -1,19 +1,24 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Npgsql;
 
 public class UserService : IUserService
 {
     private readonly UsersDbContext _db;
     private readonly IInvitationService _invitationService;
     private readonly IRegistrationNotificationService _registrationNotificationService;
+    private readonly ILogger<UserService> _logger;
 
     public UserService(
         UsersDbContext db,
         IInvitationService invitationService,
-        IRegistrationNotificationService registrationNotificationService)
+        IRegistrationNotificationService registrationNotificationService,
+        ILogger<UserService> logger)
     {
         _db = db;
         _invitationService = invitationService;
         _registrationNotificationService = registrationNotificationService;
+        _logger = logger;
     }
 
     // This is the actual Registration logic
@@ -24,7 +29,7 @@ public class UserService : IUserService
         string? userType=null)
     {
         bool alreadyExists = await _db.Users
-            .AnyAsync(u => u.phone == phone);
+            .AnyAsync(user => user.phone == phone || user.userSubId == userSubId);
 
         if (alreadyExists)
         {
@@ -64,13 +69,36 @@ public class UserService : IUserService
             pendingInvitation.status = InvitationStatus.Accepted;
         }
 
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException exception) when (
+            exception.GetBaseException() is PostgresException postgresException
+            && postgresException.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            _db.Entry(newUser).State = EntityState.Detached;
+            if (pendingInvitation is not null)
+            {
+                _db.Entry(pendingInvitation).State = EntityState.Detached;
+            }
+
+            return null;
+        }
+
+        _logger.LogInformation(
+            "User {UserId} registered. Pending invitation matched: {InvitationMatched}.",
+            newUser.id,
+            pendingInvitation is not null);
+
         await _registrationNotificationService.SendRegistrationSuccessfulSms(
+            newUser.id,
             phone,
             newUser.name);
         if (!string.IsNullOrWhiteSpace(newUser.email))
         {
             await _registrationNotificationService.SendRegistrationSuccessfulEmail(
+                newUser.id,
                 newUser.email,
                 newUser.name);
         }
@@ -81,7 +109,6 @@ public class UserService : IUserService
     // Get user by database ID.
     public async Task<User?> GetUser(Guid id)
     {
-        Console.WriteLine($"INFO: Getting user by ID: {id}");
         return await _db.Users.FindAsync(id);
     }
 
@@ -93,7 +120,6 @@ public class UserService : IUserService
             return null;
         }
 
-        Console.WriteLine($"INFO: Getting user by Cognito sub: {sub}");
         return await _db.Users.FirstOrDefaultAsync(u => u.userSubId == sub);
     }
 
@@ -105,7 +131,6 @@ public class UserService : IUserService
             return null;
         }
 
-        Console.WriteLine($"INFO: Getting user by phone: {phone}");
         return await _db.Users.FirstOrDefaultAsync(u => u.phone == phone);
     }
 
@@ -135,6 +160,9 @@ public class UserService : IUserService
 
         user.verified = verified;
         await _db.SaveChangesAsync();
+        _logger.LogInformation(
+            "Verification state updated for user {UserId}.",
+            id);
         return true;
     }
 
@@ -149,8 +177,6 @@ public class UserService : IUserService
         {
             return null;
         }
-
-        Console.WriteLine($"INFO: Creating invitation for phone: {phone}");
 
         // Idempotency: reuse an existing invitation for this phone.
         var existing = await _db.Invitations
@@ -176,6 +202,11 @@ public class UserService : IUserService
 
         _db.Invitations.Add(invitation);
         await _db.SaveChangesAsync();
+        _logger.LogInformation(
+            "Invitation {InvitationId} created for agreement {AgreementId} by user {InvitedBy}.",
+            invitation.id,
+            agreementId,
+            invitedBy);
 
         return invitation;
     }
@@ -204,6 +235,11 @@ public class UserService : IUserService
         var inviterName = inviter?.name ?? "a Yami user";
 
         await _invitationService.SendInvitationSms(phone, inviterName);
+        _logger.LogInformation(
+            "Invitation SMS submitted for invitation {InvitationId}, agreement {AgreementId}, by user {InvitedBy}.",
+            invitation.id,
+            agreementId,
+            invitedBy);
 
         return invitation;
     }
@@ -218,12 +254,13 @@ public class UserService : IUserService
             return false;
         }
 
-        Console.WriteLine($"INFO: Inviting user by phone: {phone}");
-
         var inviter = await _db.Users.FindAsync(invitedBy);
         var inviterName = inviter?.name ?? "a Yami user";
 
         await _invitationService.SendInvitationSms(phone, inviterName);
+        _logger.LogInformation(
+            "Invitation by SMS request submitted by user {InvitedBy}.",
+            invitedBy);
 
         return true;
     }
@@ -237,12 +274,13 @@ public class UserService : IUserService
             return false;
         }
 
-        Console.WriteLine($"INFO: Inviting user by email: {email}");
-
         var inviter = await _db.Users.FindAsync(invitedBy);
         var inviterName = inviter?.name ?? "a Yami user";
 
         await _invitationService.SendInvitationEmail(email, inviterName);
+        _logger.LogInformation(
+            "Invitation by email request submitted by user {InvitedBy}.",
+            invitedBy);
 
         return true;
     }

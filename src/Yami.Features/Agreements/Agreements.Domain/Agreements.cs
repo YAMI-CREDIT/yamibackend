@@ -1,10 +1,11 @@
+using System.Text.Json.Serialization;
+
 public enum AgreementStatus
 {
-    Accepted,   // Accepted by the other party
-    Rejected,     // rejected by the other party
-    Pending,  // Waiting for the other party to respond
-    InProgress,  // debtor is in the process of paying
-    Settled,  // fully paid by debtor
+    InProgress, // Repayment schedule is active
+    Rejected,
+    Pending, // Waiting for the other party to respond
+    Settled, // Fully paid by debtor
 }
 
 public enum RepaymentPlan
@@ -19,6 +20,8 @@ public enum RepaymentPlan
 public class Agreement
 {
     public Guid id { get; set; }
+    [JsonIgnore]
+    public Guid idempotencyKey { get; set; }
     public Guid creditorId { get; set; }
     public string? creditorName { get; set; }
     public Guid debtorId { get; set; }

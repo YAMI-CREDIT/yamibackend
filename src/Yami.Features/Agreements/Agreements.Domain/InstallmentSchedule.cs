@@ -1,6 +1,6 @@
 public static class InstallmentSchedule
 {
-    public static List<Installment>? Create(Agreement agreement)
+    public static List<Installment>? Create(Agreement agreement, DateOnly scheduleStartDate)
     {
         if (agreement.amountTotal != decimal.Round(agreement.amountTotal, 2))
         {
@@ -9,7 +9,7 @@ public static class InstallmentSchedule
 
         var dueDates = GetDueDates(
             agreement.repaymentPlan,
-            DateOnly.FromDateTime(agreement.createdAt),
+            scheduleStartDate,
             agreement.dueDate);
 
         if (dueDates is null)

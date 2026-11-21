@@ -1,0 +1,14 @@
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+
+WORKDIR /app
+
+# The GitHub Actions workflow runs `dotnet publish` and copies the output
+# into this context; we simply copy the pre-built artifacts here.
+COPY publish/ .
+
+RUN useradd yamibackend -u 5017 -s /bin/sh && \
+    chown -R yamibackend:yamibackend /app
+
+USER 5017
+
+ENTRYPOINT ["dotnet", "OverdueInstallments.dll"]
