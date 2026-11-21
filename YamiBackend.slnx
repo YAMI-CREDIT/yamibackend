@@ -6,5 +6,8 @@
     <Project Path="src/Yami.Features/Users/Users.csproj" />
     <Project Path="src/Yami.Features/Kyc/kyc.csproj" />
     <Project Path="src/Yami.Features/Notifications/Notifications.csproj" />
+    <Project Path="src/Yami.Features/Businesses/Businesses.csproj" />
+    <Project Path="src/Yami.Features/Agreements/Agreements.csproj" />
+    <Project Path="src/Yami.Features/OverdueInstallments/OverdueInstallments.csproj" />
   </Folder>
 </Solution>
